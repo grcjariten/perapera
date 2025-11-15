@@ -26,7 +26,10 @@ bin/
 .vscode/
 
 ### Mac OS ###
-.DS_Storebuild/
+.DS_Store
+
+### Flutter ###
+build/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
