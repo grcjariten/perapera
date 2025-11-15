@@ -77,15 +77,15 @@ const List<Lesson> lessonCatalog = <Lesson>[
             'Con ~し si elencano più motivi o caratteristiche prima della conclusione.',
         cards: <PracticeCard>[
           PracticeCard(
-            prompt: '暑い + 高い → ～し',
+            prompt: '暑い + 高い',
             answer: '暑いし、高いし。'
           ),
           PracticeCard(
-            prompt: '大阪 楽しい + 食べ物がおいしい → ～し',
+            prompt: '大阪（楽しい） + 食べ物がおいしい',
             answer: '大阪は楽しいし、食べ物もおいしい。'
           ),
           PracticeCard(
-            prompt: '静か + きれい → ～し',
+            prompt: '静か + きれい',
             answer: '静かだし、きれいです。'
           ),
         ],
@@ -96,15 +96,15 @@ const List<Lesson> lessonCatalog = <Lesson>[
             'Usato per descrivere apparenze basate su osservazione immediata.',
         cards: <PracticeCard>[
           PracticeCard(
-            prompt: '雨 → ～そう',
+            prompt: '雨（降る）',
             answer: '雨が降りそうです。'
           ),
           PracticeCard(
-            prompt: 'ケーキ → おいしそう',
+            prompt: 'ケーキ（おいしい）',
             answer: 'そのケーキはおいしそうです。'
           ),
           PracticeCard(
-            prompt: '田中さん → 疲れていそう',
+            prompt: '田中さん（疲れている）',
             answer: '田中さんは疲れていそうです。'
           ),
         ],
@@ -114,15 +114,15 @@ const List<Lesson> lessonCatalog = <Lesson>[
         description: 'La forma ～てみる indica un tentativo o esperimento.',
         cards: <PracticeCard>[
           PracticeCard(
-            prompt: '食べる → ～てみる',
+            prompt: '食べる',
             answer: '食べてみます。'
           ),
           PracticeCard(
-            prompt: '読む → ～てみる',
+            prompt: '読む',
             answer: '読んでみます。'
           ),
           PracticeCard(
-            prompt: '行く → ～てみる',
+            prompt: '行く',
             answer: '行ってみます。'
           ),
         ],
@@ -133,15 +133,15 @@ const List<Lesson> lessonCatalog = <Lesson>[
             'Nara introduce un tema limitato e un commento/consiglio su quel tema.',
         cards: <PracticeCard>[
           PracticeCard(
-            prompt: '東京なら → 駅の近くが便利',
+            prompt: '東京：駅の近くが便利',
             answer: '東京なら駅の近くが便利です。'
           ),
           PracticeCard(
-            prompt: '土曜日なら → 会える',
+            prompt: '土曜日：会える',
             answer: '土曜日なら会えます。'
           ),
           PracticeCard(
-            prompt: '寒い日なら → 鍋がいい',
+            prompt: '寒い日：鍋がいい',
             answer: '寒い日なら鍋がいいです。'
           ),
         ],
@@ -163,7 +163,7 @@ const List<Lesson> lessonCatalog = <Lesson>[
             answer: 'カメラが欲しいです。'
           ),
           PracticeCard(
-            prompt: '妹 → 犬を欲しがっている',
+            prompt: '妹（犬を欲しがっている）',
             answer: '妹は犬を欲しがっています。'
           ),
           PracticeCard(
@@ -204,15 +204,15 @@ const List<Lesson> lessonCatalog = <Lesson>[
         description: 'Consiglio gentile basato sulla condizionale passata.',
         cards: <PracticeCard>[
           PracticeCard(
-            prompt: '少し休む → ～たらどう',
+            prompt: '少し休む',
             answer: '少し休んだらどうですか。'
           ),
           PracticeCard(
-            prompt: '先生に聞く → ～たらどう',
+            prompt: '先生に聞く',
             answer: '先生に聞いたらどうですか。'
           ),
           PracticeCard(
-            prompt: '病院に行く → ～たらどう',
+            prompt: '病院に行く',
             answer: '病院に行ったらどうですか。'
           ),
         ],
@@ -249,15 +249,15 @@ const List<Lesson> lessonCatalog = <Lesson>[
             'Equivale a un “facciamo...”. I verbi ru prendono ～よう, quelli u → ～おう.',
         cards: <PracticeCard>[
           PracticeCard(
-            prompt: '食べる → 意向形',
+            prompt: '食べる',
             answer: '食べよう。'
           ),
           PracticeCard(
-            prompt: '飲む → 意向形',
+            prompt: '飲む',
             answer: '飲もう。'
           ),
           PracticeCard(
-            prompt: '行く → 意向形',
+            prompt: '行く',
             answer: '行こう。'
           ),
         ],
@@ -285,15 +285,15 @@ const List<Lesson> lessonCatalog = <Lesson>[
         description: 'Fare qualcosa in anticipo/preparazione.',
         cards: <PracticeCard>[
           PracticeCard(
-            prompt: '切符を買っておく',
+            prompt: '切符を買う',
             answer: '切符を買っておきます。'
           ),
           PracticeCard(
-            prompt: '部屋を掃除しておく',
+            prompt: '部屋を掃除する',
             answer: '部屋を掃除しておきます。'
           ),
           PracticeCard(
-            prompt: '資料を印刷しておく',
+            prompt: '資料を印刷する',
             answer: '資料を印刷しておきます。'
           ),
         ],
@@ -320,4 +320,3 @@ const List<Lesson> lessonCatalog = <Lesson>[
     ],
   ),
 ];
-

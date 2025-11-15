@@ -12,9 +12,12 @@ class TrainerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const fontFamily = 'NotoSansJP';
+    final ThemeData baseTheme =
+        ThemeData(brightness: Brightness.dark, fontFamily: fontFamily);
     return MaterialApp(
       title: 'Perapera Trainer',
-      theme: ThemeData.dark().copyWith(
+      theme: baseTheme.copyWith(
         colorScheme: const ColorScheme.dark(
           primary: Color(0xFF81C784),
           secondary: Color(0xFF64B5F6),
@@ -400,14 +403,13 @@ class _TrainerHomePageState extends State<TrainerHomePage> {
     if (conjugation == null) {
       return const SizedBox.shrink();
     }
+    final textStyle = _answerTextStyle(context);
     return Column(
       children: [
         Text(
           _formattedAnswer(),
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.secondary,
-              ),
+          style: textStyle,
         ),
         if (conjugation.note.isNotEmpty) ...[
           const SizedBox(height: 8),
@@ -425,16 +427,14 @@ class _TrainerHomePageState extends State<TrainerHomePage> {
     if (card == null) {
       return const SizedBox.shrink();
     }
-
+    final textStyle = _answerTextStyle(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           card.answer,
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.secondary,
-              ),
+          style: textStyle,
         ),
         if (card.note != null && card.note!.isNotEmpty) ...[
           const SizedBox(height: 8),
@@ -457,6 +457,20 @@ class _TrainerHomePageState extends State<TrainerHomePage> {
       default:
         return 'Grammatica';
     }
+  }
+
+  TextStyle _answerTextStyle(BuildContext context) {
+    final theme = Theme.of(context);
+    final TextStyle baseStyle = theme.textTheme.headlineMedium ??
+        theme.textTheme.titleLarge ??
+        theme.textTheme.titleMedium ??
+        const TextStyle();
+    final double requestedSize =
+        baseStyle.fontSize != null ? max(baseStyle.fontSize!, 28) : 28;
+    return baseStyle.copyWith(
+      fontSize: requestedSize,
+      color: theme.colorScheme.secondary,
+    );
   }
 
   String _formattedAnswer() {
