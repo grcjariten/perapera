@@ -319,4 +319,49 @@ const List<Lesson> lessonCatalog = <Lesson>[
       ),
     ],
   ),
+  Lesson(
+    number: 18,
+    title: 'Jon-san no arubaito - John\'s Part-time Job',
+    page: 140,
+    topics: <LessonTopic>[
+      LessonTopic(
+        title: '~nagara',
+        description:
+            'Usa la forma in -ます senza ます + ながら per esprimere due azioni contemporanee.',
+        cards: <PracticeCard>[
+          PracticeCard(
+            prompt: '食べる → ～ながら',
+            answer: '食べながら。'
+          ),
+          PracticeCard(
+            prompt: '歩く → ～ながら',
+            answer: '歩きながら。'
+          ),
+          PracticeCard(
+            prompt: '聞く → ～ながら',
+            answer: '聞きながら。'
+          ),
+        ],
+      ),
+      LessonTopic(
+        title: 'Forma ba (condizionale)',
+        description:
+            'Condizionale: ru-verbi → 読めば, u-verbi → 読めば (ultima sillaba in suono e + ば); irregolari する→すれば, 来る→くれば.',
+        cards: <PracticeCard>[
+          PracticeCard(
+            prompt: '食べる → 〜ば',
+            answer: '食べれば。'
+          ),
+          PracticeCard(
+            prompt: '行く → 〜ば',
+            answer: '行けば。'
+          ),
+          PracticeCard(
+            prompt: 'する → 〜ば',
+            answer: 'すれば。'
+          ),
+        ],
+      ),
+    ],
+  ),
 ];
