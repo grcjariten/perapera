@@ -1,4 +1,4 @@
-import 'dart:math';
+﻿import 'dart:math';
 
 enum TrainerMode {
   te('forma て'),
@@ -11,6 +11,14 @@ enum TrainerMode {
   const TrainerMode(this.label);
 
   final String label;
+}
+
+enum VerbClass {
+  godan,
+  ichidan,
+  suru,
+  kuru,
+  suruCompound,
 }
 
 const List<TrainerMode> mixModes = <TrainerMode>[
@@ -31,6 +39,8 @@ class Conjugation {
 class VerbEntry {
   const VerbEntry({
     required this.dictionary,
+    required this.reading,
+    required this.verbClass,
     required this.te,
     required this.ta,
     required this.nai,
@@ -38,6 +48,8 @@ class VerbEntry {
   });
 
   final String dictionary;
+  final String reading;
+  final VerbClass verbClass;
   final Conjugation te;
   final Conjugation ta;
   final Conjugation nai;
@@ -62,12 +74,168 @@ class VerbEntry {
         throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la coniugazione.');
     }
   }
+
+  static const Map<String, String> _godanTe = <String, String>{
+    'う': 'って',
+    'つ': 'って',
+    'る': 'って',
+    'く': 'いて',
+    'ぐ': 'いで',
+    'す': 'して',
+    'ぶ': 'んで',
+    'む': 'んで',
+    'ぬ': 'んで',
+  };
+
+  static const Map<String, String> _godanTa = <String, String>{
+    'う': 'った',
+    'つ': 'った',
+    'る': 'った',
+    'く': 'いた',
+    'ぐ': 'いだ',
+    'す': 'した',
+    'ぶ': 'んだ',
+    'む': 'んだ',
+    'ぬ': 'んだ',
+  };
+
+  static const Map<String, String> _godanNai = <String, String>{
+    'う': 'わ',
+    'つ': 'た',
+    'る': 'ら',
+    'く': 'か',
+    'ぐ': 'が',
+    'す': 'さ',
+    'ぶ': 'ば',
+    'む': 'ま',
+    'ぬ': 'な',
+  };
+
+  static const Map<String, String> _godanPotential = <String, String>{
+    'う': 'え',
+    'つ': 'て',
+    'る': 'れ',
+    'く': 'け',
+    'ぐ': 'げ',
+    'す': 'せ',
+    'ぶ': 'べ',
+    'む': 'め',
+    'ぬ': 'ね',
+  };
+
+  String readingFor(TrainerMode mode) {
+    switch (verbClass) {
+      case VerbClass.godan:
+        return _readingForGodan(mode);
+      case VerbClass.ichidan:
+        return _readingForIchidan(mode);
+      case VerbClass.suru:
+        return _readingForSuru(mode, '');
+      case VerbClass.kuru:
+        return _readingForKuru(mode);
+      case VerbClass.suruCompound:
+        return _readingForSuru(mode, reading.substring(0, reading.length - 2));
+    }
+  }
+
+  String _readingForGodan(TrainerMode mode) {
+    if (mode == TrainerMode.mix) {
+      throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+    }
+    if (mode == TrainerMode.kamo) {
+      return '$readingかもしれません';
+    }
+    final String stem = reading.substring(0, reading.length - 1);
+    final String ending = reading.substring(reading.length - 1);
+    switch (mode) {
+      case TrainerMode.te:
+        if (reading == 'いく') {
+          return 'いって';
+        }
+        return '$stem${_godanTe[ending] ?? ''}';
+      case TrainerMode.ta:
+        if (reading == 'いく') {
+          return 'いった';
+        }
+        return '$stem${_godanTa[ending] ?? ''}';
+      case TrainerMode.nai:
+        return '$stem${_godanNai[ending] ?? ''}ない';
+      case TrainerMode.potential:
+        return '$stem${_godanPotential[ending] ?? ''}る';
+      case TrainerMode.mix:
+      case TrainerMode.kamo:
+        throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+    }
+  }
+
+  String _readingForIchidan(TrainerMode mode) {
+    if (mode == TrainerMode.mix) {
+      throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+    }
+    if (mode == TrainerMode.kamo) {
+      return '$readingかもしれません';
+    }
+    final String stem = reading.substring(0, reading.length - 1);
+    switch (mode) {
+      case TrainerMode.te:
+        return '$stemて';
+      case TrainerMode.ta:
+        return '$stemた';
+      case TrainerMode.nai:
+        return '$stemない';
+      case TrainerMode.potential:
+        return '$stemられる';
+      case TrainerMode.mix:
+      case TrainerMode.kamo:
+        throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+    }
+  }
+
+  String _readingForSuru(TrainerMode mode, String prefix) {
+    if (mode == TrainerMode.mix) {
+      throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+    }
+    switch (mode) {
+      case TrainerMode.te:
+        return '${prefix}して';
+      case TrainerMode.ta:
+        return '${prefix}した';
+      case TrainerMode.nai:
+        return '${prefix}しない';
+      case TrainerMode.potential:
+        return '${prefix}できる';
+      case TrainerMode.kamo:
+        return '${prefix}するかもしれません';
+      case TrainerMode.mix:
+        throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+    }
+  }
+
+  String _readingForKuru(TrainerMode mode) {
+    if (mode == TrainerMode.mix) {
+      throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+    }
+    switch (mode) {
+      case TrainerMode.te:
+        return 'きて';
+      case TrainerMode.ta:
+        return 'きた';
+      case TrainerMode.nai:
+        return 'こない';
+      case TrainerMode.potential:
+        return 'こられる';
+      case TrainerMode.kamo:
+        return 'くるかもしれません';
+      case TrainerMode.mix:
+        throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+    }
+  }
 }
 
 class TrainerEngine {
-  TrainerEngine({Random? random})
+  TrainerEngine({Random? random, List<VerbEntry>? verbs})
       : _random = random ?? Random(),
-        _pool = List<VerbEntry>.of(verbList) {
+        _pool = List<VerbEntry>.of(verbs ?? verbList) {
     _rotate();
   }
 
@@ -92,9 +260,11 @@ class TrainerEngine {
   }
 }
 
-const List<VerbEntry> verbList = <VerbEntry>[
+const List<VerbEntry> freeVerbList = <VerbEntry>[
   VerbEntry(
     dictionary: '行く',
+    reading: 'いく',
+    verbClass: VerbClass.godan,
     te: Conjugation('行って', '（く→って）'),
     ta: Conjugation('行った', '（く→った）'),
     nai: Conjugation('行かない', '（く→かない）'),
@@ -102,6 +272,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '来る',
+    reading: 'くる',
+    verbClass: VerbClass.kuru,
     te: Conjugation('来て', '（不規則）'),
     ta: Conjugation('来た', '（不規則）'),
     nai: Conjugation('来ない', '（不規則）'),
@@ -109,6 +281,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: 'する',
+    reading: 'する',
+    verbClass: VerbClass.suru,
     te: Conjugation('して', '（不規則）'),
     ta: Conjugation('した', '（不規則）'),
     nai: Conjugation('しない', '（不規則）'),
@@ -116,6 +290,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '食べる',
+    reading: 'たべる',
+    verbClass: VerbClass.ichidan,
     te: Conjugation('食べて', '（る→て）'),
     ta: Conjugation('食べた', '（る→た）'),
     nai: Conjugation('食べない', '（る→ない）'),
@@ -123,6 +299,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '飲む',
+    reading: 'のむ',
+    verbClass: VerbClass.godan,
     te: Conjugation('飲んで', '（む→んで）'),
     ta: Conjugation('飲んだ', '（む→んだ）'),
     nai: Conjugation('飲まない', '（む→まない）'),
@@ -130,6 +308,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '見る',
+    reading: 'みる',
+    verbClass: VerbClass.ichidan,
     te: Conjugation('見て', '（る→て）'),
     ta: Conjugation('見た', '（る→た）'),
     nai: Conjugation('見ない', '（る→ない）'),
@@ -137,6 +317,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '読む',
+    reading: 'よむ',
+    verbClass: VerbClass.godan,
     te: Conjugation('読んで', '（む→んで）'),
     ta: Conjugation('読んだ', '（む→んだ）'),
     nai: Conjugation('読まない', '（む→まない）'),
@@ -144,6 +326,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '書く',
+    reading: 'かく',
+    verbClass: VerbClass.godan,
     te: Conjugation('書いて', '（く→いて）'),
     ta: Conjugation('書いた', '（く→いた）'),
     nai: Conjugation('書かない', '（く→かない）'),
@@ -151,6 +335,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '買う',
+    reading: 'かう',
+    verbClass: VerbClass.godan,
     te: Conjugation('買って', '（う→って）'),
     ta: Conjugation('買った', '（う→った）'),
     nai: Conjugation('買わない', '（う→わない）'),
@@ -158,6 +344,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '話す',
+    reading: 'はなす',
+    verbClass: VerbClass.godan,
     te: Conjugation('話して', '（す→して）'),
     ta: Conjugation('話した', '（す→した）'),
     nai: Conjugation('話さない', '（す→さない）'),
@@ -165,6 +353,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '聞く',
+    reading: 'きく',
+    verbClass: VerbClass.godan,
     te: Conjugation('聞いて', '（く→いて）'),
     ta: Conjugation('聞いた', '（く→いた）'),
     nai: Conjugation('聞かない', '（く→かない）'),
@@ -172,6 +362,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '会う',
+    reading: 'あう',
+    verbClass: VerbClass.godan,
     te: Conjugation('会って', '（う→って）'),
     ta: Conjugation('会った', '（う→った）'),
     nai: Conjugation('会わない', '（う→わない）'),
@@ -179,6 +371,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '待つ',
+    reading: 'まつ',
+    verbClass: VerbClass.godan,
     te: Conjugation('待って', '（つ→って）'),
     ta: Conjugation('待った', '（つ→った）'),
     nai: Conjugation('待たない', '（つ→たない）'),
@@ -186,6 +380,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '歩く',
+    reading: 'あるく',
+    verbClass: VerbClass.godan,
     te: Conjugation('歩いて', '（く→いて）'),
     ta: Conjugation('歩いた', '（く→いた）'),
     nai: Conjugation('歩かない', '（く→かない）'),
@@ -193,6 +389,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '泳ぐ',
+    reading: 'およぐ',
+    verbClass: VerbClass.godan,
     te: Conjugation('泳いで', '（ぐ→いで）'),
     ta: Conjugation('泳いだ', '（ぐ→いだ）'),
     nai: Conjugation('泳がない', '（ぐ→がない）'),
@@ -200,6 +398,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '死ぬ',
+    reading: 'しぬ',
+    verbClass: VerbClass.godan,
     te: Conjugation('死んで', '（ぬ→んで）'),
     ta: Conjugation('死んだ', '（ぬ→んだ）'),
     nai: Conjugation('死なない', '（ぬ→なない）'),
@@ -207,6 +407,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '遊ぶ',
+    reading: 'あそぶ',
+    verbClass: VerbClass.godan,
     te: Conjugation('遊んで', '（ぶ→んで）'),
     ta: Conjugation('遊んだ', '（ぶ→んだ）'),
     nai: Conjugation('遊ばない', '（ぶ→ばない）'),
@@ -214,6 +416,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '立つ',
+    reading: 'たつ',
+    verbClass: VerbClass.godan,
     te: Conjugation('立って', '（つ→って）'),
     ta: Conjugation('立った', '（つ→った）'),
     nai: Conjugation('立たない', '（つ→たない）'),
@@ -221,6 +425,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '入る',
+    reading: 'はいる',
+    verbClass: VerbClass.godan,
     te: Conjugation('入って', '（る→って）'),
     ta: Conjugation('入った', '（る→った）'),
     nai: Conjugation('入らない', '（る→らない）'),
@@ -228,6 +434,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '出る',
+    reading: 'でる',
+    verbClass: VerbClass.ichidan,
     te: Conjugation('出て', '（る→て）'),
     ta: Conjugation('出た', '（る→た）'),
     nai: Conjugation('出ない', '（る→ない）'),
@@ -235,6 +443,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '乗る',
+    reading: 'のる',
+    verbClass: VerbClass.godan,
     te: Conjugation('乗って', '（る→って）'),
     ta: Conjugation('乗った', '（る→った）'),
     nai: Conjugation('乗らない', '（る→らない）'),
@@ -242,6 +452,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '休む',
+    reading: 'やすむ',
+    verbClass: VerbClass.godan,
     te: Conjugation('休んで', '（む→んで）'),
     ta: Conjugation('休んだ', '（む→んだ）'),
     nai: Conjugation('休まない', '（む→まない）'),
@@ -249,6 +461,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '起きる',
+    reading: 'おきる',
+    verbClass: VerbClass.ichidan,
     te: Conjugation('起きて', '（る→て）'),
     ta: Conjugation('起きた', '（る→た）'),
     nai: Conjugation('起きない', '（る→ない）'),
@@ -256,6 +470,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '寝る',
+    reading: 'ねる',
+    verbClass: VerbClass.ichidan,
     te: Conjugation('寝て', '（る→て）'),
     ta: Conjugation('寝た', '（る→た）'),
     nai: Conjugation('寝ない', '（る→ない）'),
@@ -263,6 +479,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '勉強する',
+    reading: 'べんきょうする',
+    verbClass: VerbClass.suruCompound,
     te: Conjugation('勉強して', '（する→して）'),
     ta: Conjugation('勉強した', '（する→した）'),
     nai: Conjugation('勉強しない', '（する→しない）'),
@@ -270,6 +488,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '働く',
+    reading: 'はたらく',
+    verbClass: VerbClass.godan,
     te: Conjugation('働いて', '（く→いて）'),
     ta: Conjugation('働いた', '（く→いた）'),
     nai: Conjugation('働かない', '（く→かない）'),
@@ -277,6 +497,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '使う',
+    reading: 'つかう',
+    verbClass: VerbClass.godan,
     te: Conjugation('使って', '（う→って）'),
     ta: Conjugation('使った', '（う→った）'),
     nai: Conjugation('使わない', '（う→わない）'),
@@ -284,6 +506,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: 'あげる',
+    reading: 'あげる',
+    verbClass: VerbClass.ichidan,
     te: Conjugation('あげて', '（る→て）'),
     ta: Conjugation('あげた', '（る→た）'),
     nai: Conjugation('あげない', '（る→ない）'),
@@ -291,6 +515,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: 'もらう',
+    reading: 'もらう',
+    verbClass: VerbClass.godan,
     te: Conjugation('もらって', '（う→って）'),
     ta: Conjugation('もらった', '（う→った）'),
     nai: Conjugation('もらわない', '（う→わない）'),
@@ -298,6 +524,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '持つ',
+    reading: 'もつ',
+    verbClass: VerbClass.godan,
     te: Conjugation('持って', '（つ→って）'),
     ta: Conjugation('持った', '（つ→った）'),
     nai: Conjugation('持たない', '（つ→たない）'),
@@ -305,6 +533,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '帰る',
+    reading: 'かえる',
+    verbClass: VerbClass.godan,
     te: Conjugation('帰って', '（る→って）'),
     ta: Conjugation('帰った', '（る→った）'),
     nai: Conjugation('帰らない', '（る→らない）'),
@@ -312,6 +542,8 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '走る',
+    reading: 'はしる',
+    verbClass: VerbClass.godan,
     te: Conjugation('走って', '（る→って）'),
     ta: Conjugation('走った', '（る→った）'),
     nai: Conjugation('走らない', '（る→らない）'),
@@ -319,9 +551,340 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ),
   VerbEntry(
     dictionary: '知る',
+    reading: 'しる',
+    verbClass: VerbClass.godan,
     te: Conjugation('知って', '（る→って）'),
     ta: Conjugation('知った', '（る→った）'),
     nai: Conjugation('知らない', '（る→らない）'),
     potential: Conjugation('知れる', '（る→れる）'),
   ),
 ];
+
+const List<VerbEntry> premiumVerbList = <VerbEntry>[
+  VerbEntry(
+    dictionary: '作る',
+    reading: 'つくる',
+    verbClass: VerbClass.godan,
+    te: Conjugation('作って', '（る→って）'),
+    ta: Conjugation('作った', '（る→った）'),
+    nai: Conjugation('作らない', '（る→らない）'),
+    potential: Conjugation('作れる', '（る→れる）'),
+  ),
+  VerbEntry(
+    dictionary: '送る',
+    reading: 'おくる',
+    verbClass: VerbClass.godan,
+    te: Conjugation('送って', '（る→って）'),
+    ta: Conjugation('送った', '（る→った）'),
+    nai: Conjugation('送らない', '（る→らない）'),
+    potential: Conjugation('送れる', '（る→れる）'),
+  ),
+  VerbEntry(
+    dictionary: '売る',
+    reading: 'うる',
+    verbClass: VerbClass.godan,
+    te: Conjugation('売って', '（る→って）'),
+    ta: Conjugation('売った', '（る→った）'),
+    nai: Conjugation('売らない', '（る→らない）'),
+    potential: Conjugation('売れる', '（る→れる）'),
+  ),
+  VerbEntry(
+    dictionary: '切る',
+    reading: 'きる',
+    verbClass: VerbClass.godan,
+    te: Conjugation('切って', '（る→って）'),
+    ta: Conjugation('切った', '（る→った）'),
+    nai: Conjugation('切らない', '（る→らない）'),
+    potential: Conjugation('切れる', '（る→れる）'),
+  ),
+  VerbEntry(
+    dictionary: '取る',
+    reading: 'とる',
+    verbClass: VerbClass.godan,
+    te: Conjugation('取って', '（る→って）'),
+    ta: Conjugation('取った', '（る→った）'),
+    nai: Conjugation('取らない', '（る→らない）'),
+    potential: Conjugation('取れる', '（る→れる）'),
+  ),
+  VerbEntry(
+    dictionary: '習う',
+    reading: 'ならう',
+    verbClass: VerbClass.godan,
+    te: Conjugation('習って', '（う→って）'),
+    ta: Conjugation('習った', '（う→った）'),
+    nai: Conjugation('習わない', '（う→わない）'),
+    potential: Conjugation('習える', '（う→える）'),
+  ),
+  VerbEntry(
+    dictionary: '歌う',
+    reading: 'うたう',
+    verbClass: VerbClass.godan,
+    te: Conjugation('歌って', '（う→って）'),
+    ta: Conjugation('歌った', '（う→った）'),
+    nai: Conjugation('歌わない', '（う→わない）'),
+    potential: Conjugation('歌える', '（う→える）'),
+  ),
+  VerbEntry(
+    dictionary: '払う',
+    reading: 'はらう',
+    verbClass: VerbClass.godan,
+    te: Conjugation('払って', '（う→って）'),
+    ta: Conjugation('払った', '（う→った）'),
+    nai: Conjugation('払わない', '（う→わない）'),
+    potential: Conjugation('払える', '（う→える）'),
+  ),
+  VerbEntry(
+    dictionary: '拾う',
+    reading: 'ひろう',
+    verbClass: VerbClass.godan,
+    te: Conjugation('拾って', '（う→って）'),
+    ta: Conjugation('拾った', '（う→った）'),
+    nai: Conjugation('拾わない', '（う→わない）'),
+    potential: Conjugation('拾える', '（う→える）'),
+  ),
+  VerbEntry(
+    dictionary: '急ぐ',
+    reading: 'いそぐ',
+    verbClass: VerbClass.godan,
+    te: Conjugation('急いで', '（ぐ→いで）'),
+    ta: Conjugation('急いだ', '（ぐ→いだ）'),
+    nai: Conjugation('急がない', '（ぐ→がない）'),
+    potential: Conjugation('急げる', '（ぐ→げる）'),
+  ),
+  VerbEntry(
+    dictionary: '脱ぐ',
+    reading: 'ぬぐ',
+    verbClass: VerbClass.godan,
+    te: Conjugation('脱いで', '（ぐ→いで）'),
+    ta: Conjugation('脱いだ', '（ぐ→いだ）'),
+    nai: Conjugation('脱がない', '（ぐ→がない）'),
+    potential: Conjugation('脱げる', '（ぐ→げる）'),
+  ),
+  VerbEntry(
+    dictionary: '消す',
+    reading: 'けす',
+    verbClass: VerbClass.godan,
+    te: Conjugation('消して', '（す→して）'),
+    ta: Conjugation('消した', '（す→した）'),
+    nai: Conjugation('消さない', '（す→さない）'),
+    potential: Conjugation('消せる', '（す→せる）'),
+  ),
+  VerbEntry(
+    dictionary: '返す',
+    reading: 'かえす',
+    verbClass: VerbClass.godan,
+    te: Conjugation('返して', '（す→して）'),
+    ta: Conjugation('返した', '（す→した）'),
+    nai: Conjugation('返さない', '（す→さない）'),
+    potential: Conjugation('返せる', '（す→せる）'),
+  ),
+  VerbEntry(
+    dictionary: '探す',
+    reading: 'さがす',
+    verbClass: VerbClass.godan,
+    te: Conjugation('探して', '（す→して）'),
+    ta: Conjugation('探した', '（す→した）'),
+    nai: Conjugation('探さない', '（す→さない）'),
+    potential: Conjugation('探せる', '（す→せる）'),
+  ),
+  VerbEntry(
+    dictionary: '打つ',
+    reading: 'うつ',
+    verbClass: VerbClass.godan,
+    te: Conjugation('打って', '（つ→って）'),
+    ta: Conjugation('打った', '（つ→った）'),
+    nai: Conjugation('打たない', '（つ→たない）'),
+    potential: Conjugation('打てる', '（つ→てる）'),
+  ),
+  VerbEntry(
+    dictionary: '住む',
+    reading: 'すむ',
+    verbClass: VerbClass.godan,
+    te: Conjugation('住んで', '（む→んで）'),
+    ta: Conjugation('住んだ', '（む→んだ）'),
+    nai: Conjugation('住まない', '（む→まない）'),
+    potential: Conjugation('住める', '（む→める）'),
+  ),
+  VerbEntry(
+    dictionary: '呼ぶ',
+    reading: 'よぶ',
+    verbClass: VerbClass.godan,
+    te: Conjugation('呼んで', '（ぶ→んで）'),
+    ta: Conjugation('呼んだ', '（ぶ→んだ）'),
+    nai: Conjugation('呼ばない', '（ぶ→ばない）'),
+    potential: Conjugation('呼べる', '（ぶ→べる）'),
+  ),
+  VerbEntry(
+    dictionary: '飛ぶ',
+    reading: 'とぶ',
+    verbClass: VerbClass.godan,
+    te: Conjugation('飛んで', '（ぶ→んで）'),
+    ta: Conjugation('飛んだ', '（ぶ→んだ）'),
+    nai: Conjugation('飛ばない', '（ぶ→ばない）'),
+    potential: Conjugation('飛べる', '（ぶ→べる）'),
+  ),
+  VerbEntry(
+    dictionary: '運ぶ',
+    reading: 'はこぶ',
+    verbClass: VerbClass.godan,
+    te: Conjugation('運んで', '（ぶ→んで）'),
+    ta: Conjugation('運んだ', '（ぶ→んだ）'),
+    nai: Conjugation('運ばない', '（ぶ→ばない）'),
+    potential: Conjugation('運べる', '（ぶ→べる）'),
+  ),
+  VerbEntry(
+    dictionary: '選ぶ',
+    reading: 'えらぶ',
+    verbClass: VerbClass.godan,
+    te: Conjugation('選んで', '（ぶ→んで）'),
+    ta: Conjugation('選んだ', '（ぶ→んだ）'),
+    nai: Conjugation('選ばない', '（ぶ→ばない）'),
+    potential: Conjugation('選べる', '（ぶ→べる）'),
+  ),
+  VerbEntry(
+    dictionary: '教える',
+    reading: 'おしえる',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('教えて', '（る→て）'),
+    ta: Conjugation('教えた', '（る→た）'),
+    nai: Conjugation('教えない', '（る→ない）'),
+    potential: Conjugation('教えられる', '（る→られる）'),
+  ),
+  VerbEntry(
+    dictionary: '覚える',
+    reading: 'おぼえる',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('覚えて', '（る→て）'),
+    ta: Conjugation('覚えた', '（る→た）'),
+    nai: Conjugation('覚えない', '（る→ない）'),
+    potential: Conjugation('覚えられる', '（る→られる）'),
+  ),
+  VerbEntry(
+    dictionary: '忘れる',
+    reading: 'わすれる',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('忘れて', '（る→て）'),
+    ta: Conjugation('忘れた', '（る→た）'),
+    nai: Conjugation('忘れない', '（る→ない）'),
+    potential: Conjugation('忘れられる', '（る→られる）'),
+  ),
+  VerbEntry(
+    dictionary: '借りる',
+    reading: 'かりる',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('借りて', '（る→て）'),
+    ta: Conjugation('借りた', '（る→た）'),
+    nai: Conjugation('借りない', '（る→ない）'),
+    potential: Conjugation('借りられる', '（る→られる）'),
+  ),
+  VerbEntry(
+    dictionary: '受ける',
+    reading: 'うける',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('受けて', '（る→て）'),
+    ta: Conjugation('受けた', '（る→た）'),
+    nai: Conjugation('受けない', '（る→ない）'),
+    potential: Conjugation('受けられる', '（る→られる）'),
+  ),
+  VerbEntry(
+    dictionary: '出かける',
+    reading: 'でかける',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('出かけて', '（る→て）'),
+    ta: Conjugation('出かけた', '（る→た）'),
+    nai: Conjugation('出かけない', '（る→ない）'),
+    potential: Conjugation('出かけられる', '（る→られる）'),
+  ),
+  VerbEntry(
+    dictionary: '始める',
+    reading: 'はじめる',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('始めて', '（る→て）'),
+    ta: Conjugation('始めた', '（る→た）'),
+    nai: Conjugation('始めない', '（る→ない）'),
+    potential: Conjugation('始められる', '（る→られる）'),
+  ),
+  VerbEntry(
+    dictionary: '続ける',
+    reading: 'つづける',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('続けて', '（る→て）'),
+    ta: Conjugation('続けた', '（る→た）'),
+    nai: Conjugation('続けない', '（る→ない）'),
+    potential: Conjugation('続けられる', '（る→られる）'),
+  ),
+  VerbEntry(
+    dictionary: 'つける',
+    reading: 'つける',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('つけて', '（る→て）'),
+    ta: Conjugation('つけた', '（る→た）'),
+    nai: Conjugation('つけない', '（る→ない）'),
+    potential: Conjugation('つけられる', '（る→られる）'),
+  ),
+  VerbEntry(
+    dictionary: '開ける',
+    reading: 'あける',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('開けて', '（る→て）'),
+    ta: Conjugation('開けた', '（る→た）'),
+    nai: Conjugation('開けない', '（る→ない）'),
+    potential: Conjugation('開けられる', '（る→られる）'),
+  ),
+  VerbEntry(
+    dictionary: '閉める',
+    reading: 'しめる',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('閉めて', '（る→て）'),
+    ta: Conjugation('閉めた', '（る→た）'),
+    nai: Conjugation('閉めない', '（る→ない）'),
+    potential: Conjugation('閉められる', '（る→られる）'),
+  ),
+  VerbEntry(
+    dictionary: '捨てる',
+    reading: 'すてる',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('捨てて', '（る→て）'),
+    ta: Conjugation('捨てた', '（る→た）'),
+    nai: Conjugation('捨てない', '（る→ない）'),
+    potential: Conjugation('捨てられる', '（る→られる）'),
+  ),
+  VerbEntry(
+    dictionary: '浴びる',
+    reading: 'あびる',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('浴びて', '（る→て）'),
+    ta: Conjugation('浴びた', '（る→た）'),
+    nai: Conjugation('浴びない', '（る→ない）'),
+    potential: Conjugation('浴びられる', '（る→られる）'),
+  ),
+  VerbEntry(
+    dictionary: '迎える',
+    reading: 'むかえる',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('迎えて', '（る→て）'),
+    ta: Conjugation('迎えた', '（る→た）'),
+    nai: Conjugation('迎えない', '（る→ない）'),
+    potential: Conjugation('迎えられる', '（る→られる）'),
+  ),
+  VerbEntry(
+    dictionary: '決める',
+    reading: 'きめる',
+    verbClass: VerbClass.ichidan,
+    te: Conjugation('決めて', '（る→て）'),
+    ta: Conjugation('決めた', '（る→た）'),
+    nai: Conjugation('決めない', '（る→ない）'),
+    potential: Conjugation('決められる', '（る→られる）'),
+  ),
+];
+
+const List<VerbEntry> verbList = <VerbEntry>[
+  ...freeVerbList,
+  ...premiumVerbList,
+];
+
+
+
+
+
+

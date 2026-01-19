@@ -1,6 +1,6 @@
 {
-    "name": "perapera_trainer",
-    "short_name": "perapera_trainer",
+    "name": "perapera",
+    "short_name": "perapera",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

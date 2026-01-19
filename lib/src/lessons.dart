@@ -1,4 +1,4 @@
-import 'data.dart';
+﻿import 'data.dart';
 
 class Lesson {
   const Lesson({
@@ -13,7 +13,7 @@ class Lesson {
   final int page;
   final List<LessonTopic> topics;
 
-  String get label => 'Capitolo $number';
+  String get label => 'Unita $number';
 }
 
 enum LessonTopicType { grammar, culture, expressions }
@@ -57,7 +57,7 @@ const List<Lesson> lessonCatalog = <Lesson>[
     page: 26,
     topics: <LessonTopic>[
       LessonTopic(
-        title: 'Verbi potenziali',
+        title: 'Potenziale',
         description:
             'Esprimono capacità o possibilità. Diversi pattern in base al gruppo.',
         trainerMode: TrainerMode.potential,
@@ -72,7 +72,7 @@ const List<Lesson> lessonCatalog = <Lesson>[
         ],
       ),
       LessonTopic(
-        title: '~shi per elencare motivi',
+        title: '~shi',
         description:
             'Con ~し si elencano più motivi o caratteristiche prima della conclusione.',
         cards: <PracticeCard>[
@@ -91,7 +91,7 @@ const List<Lesson> lessonCatalog = <Lesson>[
         ],
       ),
       LessonTopic(
-        title: '~sou desu (sembra che...)',
+        title: '~sou desu',
         description:
             'Usato per descrivere apparenze basate su osservazione immediata.',
         cards: <PracticeCard>[
@@ -154,7 +154,7 @@ const List<Lesson> lessonCatalog = <Lesson>[
     page: 50,
     topics: <LessonTopic>[
       LessonTopic(
-        title: 'Hoshii',
+        title: 'hoshi',
         description:
             'Aggettivo per esprimere desiderio personale; con altri soggetti si usa ～たがっている.',
         cards: <PracticeCard>[
@@ -173,7 +173,7 @@ const List<Lesson> lessonCatalog = <Lesson>[
         ],
       ),
       LessonTopic(
-        title: '~kamoshiremasen',
+        title: '~kamo',
         description: 'Indica possibilità o incertezza; si usa la forma piana.',
         trainerMode: TrainerMode.kamo,
         examples: <String>[
@@ -181,7 +181,7 @@ const List<Lesson> lessonCatalog = <Lesson>[
         ],
       ),
       LessonTopic(
-        title: 'ageru / kureru / morau',
+        title: 'ageru/kureru/morau',
         description:
             'Verbi per esprimere dare/ricevere con sfumature di cortesia.',
         cards: <PracticeCard>[
@@ -200,7 +200,7 @@ const List<Lesson> lessonCatalog = <Lesson>[
         ],
       ),
       LessonTopic(
-        title: '~tara dou desu ka',
+        title: '~tara',
         description: 'Consiglio gentile basato sulla condizionale passata.',
         cards: <PracticeCard>[
           PracticeCard(
@@ -218,7 +218,7 @@ const List<Lesson> lessonCatalog = <Lesson>[
         ],
       ),
       LessonTopic(
-        title: 'number + mo / number + shika + negativa',
+        title: 'number + mo / shika',
         description:
             '～も enfatizza quantità maggiore del previsto; ～しか＋neg ne evidenzia pochezza.',
         cards: <PracticeCard>[
@@ -244,7 +244,7 @@ const List<Lesson> lessonCatalog = <Lesson>[
     page: 80,
     topics: <LessonTopic>[
       LessonTopic(
-        title: 'Forma volitiva',
+        title: 'Volitiva',
         description:
             'Equivale a un “facciamo...”. I verbi ru prendono ～よう, quelli u → ～おう.',
         cards: <PracticeCard>[
@@ -263,7 +263,7 @@ const List<Lesson> lessonCatalog = <Lesson>[
         ],
       ),
       LessonTopic(
-        title: 'Volitivo + to omotte imasu',
+        title: 'Volitivo + to omotte',
         description: 'Indica un piano deciso/già in preparazione.',
         cards: <PracticeCard>[
           PracticeCard(
@@ -299,7 +299,7 @@ const List<Lesson> lessonCatalog = <Lesson>[
         ],
       ),
       LessonTopic(
-        title: 'Frasi relative',
+        title: 'Relative',
         description:
             'Una frase piana può qualificare un sostantivo senza pronomi relativi.',
         cards: <PracticeCard>[
@@ -344,7 +344,7 @@ const List<Lesson> lessonCatalog = <Lesson>[
         ],
       ),
       LessonTopic(
-        title: 'Forma ba (condizionale)',
+        title: 'Forma ba',
         description:
             'Condizionale: ru-verbi → 読めば, u-verbi → 読めば (ultima sillaba in suono e + ば); irregolari する→すれば, 来る→くれば.',
         cards: <PracticeCard>[
@@ -365,3 +365,4 @@ const List<Lesson> lessonCatalog = <Lesson>[
     ],
   ),
 ];
+
