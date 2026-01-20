@@ -11,7 +11,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
   shared_preferences: ^2.2.2
+  url_launcher: ^6.2.4
 
 dev_dependencies:
   flutter_test:
@@ -27,6 +31,7 @@ flutter_launcher_icons:
   adaptive_icon_foreground: assets/app_icon.png
 
 flutter:
+  generate: true
   uses-material-design: true
   fonts:
     - family: NotoSansJP
@@ -37,3 +42,6 @@ flutter:
           weight: 500
         - asset: assets/fonts/NotoSansJP-Bold.otf
           weight: 700
+    - family: PlayfairDisplay
+      fonts:
+        - asset: assets/fonts/PlayfairDisplay-Variable.ttf

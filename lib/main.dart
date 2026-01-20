@@ -1,15 +1,74 @@
 ﻿import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:perapera_trainer/l10n/app_localizations.dart';
 import 'package:perapera_trainer/trainer_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import 'src/premium_flags.dart';
 
 void main() {
   runApp(const TrainerApp());
 }
 
-class TrainerApp extends StatelessWidget {
+const String _localeOverrideKey = 'perapera_locale_override';
+const String _feedbackUrl = 'https://forms.gle/JkDD8zSeN3fJQ8hv9';
+const Locale _fallbackLocale = Locale('en');
+
+Locale? _localeFromCode(String? code) {
+  switch (code) {
+    case 'en':
+      return const Locale('en');
+    case 'it':
+      return const Locale('it');
+    case 'fr':
+      return const Locale('fr');
+    case 'es':
+      return const Locale('es');
+    default:
+      return null;
+  }
+}
+
+class TrainerApp extends StatefulWidget {
   const TrainerApp({super.key});
+
+  @override
+  State<TrainerApp> createState() => _TrainerAppState();
+}
+
+class _TrainerAppState extends State<TrainerApp> {
+  Locale? _localeOverride;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocaleOverride();
+  }
+
+  Future<void> _loadLocaleOverride() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getString(_localeOverrideKey);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _localeOverride = _localeFromCode(stored);
+    });
+  }
+
+  Future<void> _updateLocaleOverride(Locale? locale) async {
+    setState(() {
+      _localeOverride = locale;
+    });
+    final prefs = await SharedPreferences.getInstance();
+    if (locale == null) {
+      await prefs.remove(_localeOverrideKey);
+    } else {
+      await prefs.setString(_localeOverrideKey, locale.languageCode);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +79,8 @@ class TrainerApp extends StatelessWidget {
       useMaterial3: true,
     );
     return MaterialApp(
-      title: 'perapera',
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+      debugShowCheckedModeBanner: false,
       theme: baseTheme.copyWith(
         colorScheme: const ColorScheme.dark(
           primary: _accentWarm,
@@ -34,7 +94,7 @@ class TrainerApp extends StatelessWidget {
           backgroundColor: _bgDeep,
           foregroundColor: Colors.white,
           elevation: 0,
-          centerTitle: false,
+          centerTitle: true,
         ),
         cardTheme: CardThemeData(
           elevation: 2,
@@ -83,13 +143,37 @@ class TrainerApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const TrainerHomePage(),
+      locale: _localeOverride,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localeResolutionCallback: (locale, supportedLocales) {
+        if (locale == null) {
+          return _fallbackLocale;
+        }
+        for (final supportedLocale in supportedLocales) {
+          if (supportedLocale.languageCode == locale.languageCode) {
+            return supportedLocale;
+          }
+        }
+        return _fallbackLocale;
+      },
+      home: TrainerHomePage(
+        localeOverride: _localeOverride,
+        onLocaleChanged: _updateLocaleOverride,
+      ),
     );
   }
 }
 
 class TrainerHomePage extends StatefulWidget {
-  const TrainerHomePage({super.key});
+  const TrainerHomePage({
+    super.key,
+    required this.localeOverride,
+    required this.onLocaleChanged,
+  });
+
+  final Locale? localeOverride;
+  final ValueChanged<Locale?> onLocaleChanged;
 
   @override
   State<TrainerHomePage> createState() => _TrainerHomePageState();
@@ -132,6 +216,13 @@ class PracticeDeck {
     return topic?.title ?? '';
   }
 
+  String get id {
+    if (kind == DeckKind.verbs && mode != null) {
+      return 'mode_${mode!.name}';
+    }
+    return 'topic_${topic?.title ?? ''}';
+  }
+
 }
 
 class _QuestionSnapshot {
@@ -141,6 +232,7 @@ class _QuestionSnapshot {
     required this.verb,
     required this.answer,
     required this.answerReading,
+    required this.answerVisible,
   });
 
   final int number;
@@ -148,6 +240,18 @@ class _QuestionSnapshot {
   final VerbEntry verb;
   final String answer;
   final String answerReading;
+  final bool answerVisible;
+
+  _QuestionSnapshot copyWith({bool? answerVisible}) {
+    return _QuestionSnapshot(
+      number: number,
+      mode: mode,
+      verb: verb,
+      answer: answer,
+      answerReading: answerReading,
+      answerVisible: answerVisible ?? this.answerVisible,
+    );
+  }
 }
 
 class _ResolvedRule {
@@ -454,7 +558,10 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   @override
   void initState() {
     super.initState();
-    _engine = TrainerEngine(verbs: _isProUser ? verbList : freeVerbList);
+    final bool includePremiumVerbs = enablePremiumVerbs && _isProUser;
+    _engine = TrainerEngine(
+      verbs: includePremiumVerbs ? verbList : freeVerbList,
+    );
     _proPulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 6),
@@ -487,7 +594,10 @@ class _TrainerHomePageState extends State<TrainerHomePage>
 
     for (final mode in TrainerMode.values) {
       final deck = PracticeDeck.verbs(mode);
-      if (labels.add(deck.label)) {
+      if (!showLockedDecks && !_isDeckAvailable(deck)) {
+        continue;
+      }
+      if (labels.add(deck.id)) {
         decks.add(deck);
       }
     }
@@ -498,7 +608,10 @@ class _TrainerHomePageState extends State<TrainerHomePage>
           continue;
         }
         final deck = PracticeDeck.topic(lesson, topic);
-        if (labels.add(deck.label)) {
+        if (!showLockedDecks && !_isDeckAvailable(deck)) {
+          continue;
+        }
+        if (labels.add(deck.id)) {
           decks.add(deck);
         }
       }
@@ -507,21 +620,92 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     return decks;
   }
 
+  String _deckLabel(PracticeDeck deck, AppLocalizations l10n) {
+    if (deck.kind == DeckKind.verbs && deck.mode != null) {
+      return _modeLabel(deck.mode!, l10n);
+    }
+    final topic = deck.topic;
+    if (topic == null) {
+      return '';
+    }
+    return _ruleLabel(topic.title, l10n);
+  }
+
+  String _modeLabel(TrainerMode mode, AppLocalizations l10n) {
+    switch (mode) {
+      case TrainerMode.te:
+        return l10n.modeTe;
+      case TrainerMode.ta:
+        return l10n.modeTa;
+      case TrainerMode.nai:
+        return l10n.modeNai;
+      case TrainerMode.potential:
+        return l10n.modePotential;
+      case TrainerMode.mix:
+        return l10n.modeMix;
+      case TrainerMode.kamo:
+        return l10n.modeKamo;
+    }
+  }
+
+  String _ruleLabel(String ruleKey, AppLocalizations l10n) {
+    switch (ruleKey) {
+      case '~shi':
+        return l10n.ruleShi;
+      case '~sou desu':
+        return l10n.ruleSouDesu;
+      case '~te miru':
+        return l10n.ruleTeMiru;
+      case 'Nara':
+        return l10n.ruleNara;
+      case 'hoshi':
+        return l10n.ruleHoshi;
+      case 'ageru/kureru/morau':
+        return l10n.ruleAgeruKureruMorau;
+      case '~tara':
+        return l10n.ruleTara;
+      case 'number + mo / shika':
+        return l10n.ruleNumberMoShika;
+      case 'Volitiva':
+        return l10n.ruleVolitional;
+      case 'Volitivo + to omotte':
+        return l10n.ruleVolitionalToOmotte;
+      case '~te oku':
+        return l10n.ruleTeOku;
+      case 'Relative':
+        return l10n.ruleRelative;
+      case '~nagara':
+        return l10n.ruleNagara;
+      case 'Forma ba':
+        return l10n.ruleBaForm;
+      default:
+        return ruleKey;
+    }
+  }
+
   bool get _isProUser => _tier == AppTier.pro;
   bool get _hasQuestion => _currentVerb != null && _currentAnswer.isNotEmpty;
+
+  bool _isFreeRule(_ResolvedRule resolvedRule) {
+    if (resolvedRule.mode != null) {
+      return _freeVerbModes.contains(resolvedRule.mode);
+    }
+    return _freeRuleTitles.contains(resolvedRule.rule?.title ?? '');
+  }
 
   bool _isDeckAvailable(PracticeDeck deck) {
     final resolvedRule = _resolveRule(deck);
     if (resolvedRule == null) {
       return false;
     }
+    final bool isFree = _isFreeRule(resolvedRule);
+    if (!premiumEnabled) {
+      return isFree;
+    }
     if (_isProUser) {
       return true;
     }
-    if (resolvedRule.mode != null) {
-      return _freeVerbModes.contains(resolvedRule.mode);
-    }
-    return _freeRuleTitles.contains(resolvedRule.rule?.title ?? '');
+    return isFree;
   }
 
   bool _isTopicSupported(LessonTopic topic) {
@@ -553,76 +737,88 @@ class _TrainerHomePageState extends State<TrainerHomePage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('perapera'),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [_bgDeep, Color(0xFF1A1C20)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    final l10n = AppLocalizations.of(context)!;
+    final TextStyle titleStyle =
+        Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontFamily: 'PlayfairDisplay',
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.4,
+            ) ??
+            const TextStyle(
+              fontSize: 22,
+              fontFamily: 'PlayfairDisplay',
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.4,
+            );
+    return WillPopScope(
+      onWillPop: () async {
+        if (!_sessionActive) {
+          return true;
+        }
+        _stopSession();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.appTitle, style: titleStyle),
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [_bgDeep, Color(0xFF1A1C20)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
           ),
-        ),
-        actions: [
-          if (!_isProUser)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: _buildProPill(),
+          actions: [
+            IconButton(
+              onPressed: _openSettings,
+              tooltip: l10n.settingsTitle,
+              icon: const Icon(Icons.settings),
             ),
-        ],
-      ),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [_bgDeep, Color(0xFF1B1D22)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+            if (_sessionActive)
+              TextButton.icon(
+                onPressed: _stopSession,
+                icon: const Icon(Icons.close, size: 18),
+                label: Text(l10n.exitSession),
+                style: TextButton.styleFrom(
+                  foregroundColor: _accentCoral,
+                ),
+              ),
+            if (!_sessionActive && showProBanners && !_isProUser)
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: _buildProPill(),
+              ),
+          ],
+        ),
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [_bgDeep, Color(0xFF1B1D22)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              top: -100,
-              right: -60,
-              child: _buildGlow(const Color(0x33FFC857), 220),
-            ),
-            Positioned(
-              bottom: -120,
-              left: -80,
-              child: _buildGlow(const Color(0x334DD0E1), 260),
-            ),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final double controlHeight =
-                    (constraints.maxHeight * 0.48).clamp(220.0, 420.0);
-                return Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ConstrainedBox(
-                        constraints: BoxConstraints(maxHeight: controlHeight),
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _buildControls(),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Expanded(child: _buildQuestionCard()),
-                      const SizedBox(height: 12),
-                      _buildBottomControls(),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
+              Positioned(
+                top: -100,
+                right: -60,
+                child: _buildGlow(const Color(0x33FFC857), 220),
+              ),
+              Positioned(
+                bottom: -120,
+                left: -80,
+                child: _buildGlow(const Color(0x334DD0E1), 260),
+              ),
+              if (_sessionActive) _buildSessionBody() else _buildSelectionBody(),
+            ],
+          ),
         ),
       ),
     );
@@ -643,92 +839,160 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     );
   }
 
+  Widget _buildSelectionBody() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double maxWidth = min(constraints.maxWidth, 680);
+        final double minHeight = max(420, constraints.maxHeight * 0.62);
+        return Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: maxWidth,
+                minHeight: minHeight,
+              ),
+              child: _buildControls(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSessionBody() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double contentWidth = min(constraints.maxWidth, 720);
+        return Align(
+          alignment: Alignment.topCenter,
+          child: SizedBox(
+            width: contentWidth,
+            height: constraints.maxHeight,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: _buildQuestionCard()),
+                  const SizedBox(height: 12),
+                  _buildBottomControls(),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => SettingsPage(
+          localeOverride: widget.localeOverride,
+          onLocaleChanged: widget.onLocaleChanged,
+        ),
+      ),
+    );
+  }
+
   Widget _buildControls() {
     final deck = _selectedDeck;
     final canStartSession = _canPracticeDeck(deck);
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Card(
       margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            colors: [_bgCard, Color(0xFF1D2128)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
+          child: Align(
+            alignment: Alignment.center,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: Text(
-                    'Scegli la regola',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                Text(
+                  l10n.chooseRuleTitle,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<PracticeDeck>(
-              value: deck,
-              isExpanded: true,
-              hint: const Text('Scegli una regola'),
-              dropdownColor: _bgCard,
-              icon: const Icon(Icons.expand_more),
-              onChanged: (value) {
-                if (value == null) return;
-                _selectDeck(value);
-              },
-              items: _deckDropdownItems(context),
-            ),
-            if (!canStartSession) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.secondary,
+                const SizedBox(height: 6),
+                Text(
+                  l10n.chooseRuleSubtitle,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                    height: 1.35,
                   ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'Seleziona una regola disponibile per iniziare.',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: Theme.of(context).hintColor),
-                    ),
+                ),
+                const SizedBox(height: 20),
+                DropdownButtonFormField<PracticeDeck>(
+                  value: deck,
+                  isExpanded: true,
+                  hint: Text(l10n.chooseRuleHint),
+                  dropdownColor: _bgCard,
+                  icon: const Icon(Icons.expand_more),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    _selectDeck(value);
+                  },
+                  items: _deckDropdownItems(context),
+                ),
+                if (!canStartSession) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: theme.colorScheme.secondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          l10n.chooseRuleUnavailableHint,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.hintColor,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
-            const SizedBox(height: 12),
-            if (!_isProUser) _buildProBanner(),
-            if (!_isProUser) const SizedBox(height: 12),
-            Wrap(
-              alignment: WrapAlignment.start,
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                ElevatedButton.icon(
-                  onPressed:
-                      !_sessionActive && canStartSession ? _startSession : null,
-                  icon: const Icon(Icons.play_arrow, size: 20),
-                  label: const Text('Inizia sessione'),
-                ),
-                if (_sessionActive)
-                  OutlinedButton.icon(
-                    onPressed: _stopSession,
-                    icon: const Icon(Icons.stop, size: 20),
-                    label: const Text('Ferma'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: _accentCoral,
-                      side: const BorderSide(color: _accentCoral),
+                if (showProBanners && !_isProUser) ...[
+                  const SizedBox(height: 16),
+                  _buildProBanner(),
+                ],
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: canStartSession ? _startSession : null,
+                    icon: const Icon(Icons.play_arrow, size: 20),
+                    label: Text(l10n.startSession),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
+                ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -738,12 +1002,15 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     BuildContext context,
   ) {
     final disabledColor = Theme.of(context).disabledColor;
+    final l10n = AppLocalizations.of(context)!;
     return _decks
         .map(
           (deck) {
             final bool isAvailable = _isDeckAvailable(deck);
-            final bool showPro = !_isProUser && !isAvailable;
-            final bool showFree = !_isProUser && isAvailable;
+            final bool showBadges = showProBadges && !_isProUser;
+            final bool showPro = showBadges && !isAvailable;
+            final bool showFree = showBadges && isAvailable;
+            final deckLabel = _deckLabel(deck, l10n);
             return DropdownMenuItem<PracticeDeck>(
               value: deck,
               enabled: isAvailable,
@@ -751,7 +1018,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                 children: [
                   Expanded(
                     child: Text(
-                      deck.label,
+                      deckLabel,
                       style:
                           isAvailable ? null : TextStyle(color: disabledColor),
                     ),
@@ -767,7 +1034,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'FREE',
+                          l10n.badgeFree,
                           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                 color: _accentCool,
                                 fontWeight: FontWeight.w600,
@@ -787,7 +1054,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'PRO',
+                          l10n.badgePro,
                           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                 color: _proGold,
                                 fontWeight: FontWeight.w600,
@@ -814,16 +1081,18 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   Widget _buildQuestionCard() {
     final deck = _selectedDeck;
     final bool hasQuestion = _hasQuestion;
+    final l10n = AppLocalizations.of(context)!;
 
-    final String header = deck?.label ?? 'Scegli una regola';
+    final String header =
+        deck == null ? l10n.chooseRuleTitle : _deckLabel(deck, l10n);
     final String prompt = _currentVerb?.dictionary ?? '';
     final String? promptReading = _currentVerb?.reading;
     final bool showPromptReading = _shouldShowReading(prompt, promptReading);
 
     if (!hasQuestion) {
       final subtitle = deck == null
-          ? 'Seleziona una regola.'
-          : 'Premi "Inizia sessione" per partire.';
+          ? l10n.selectRuleToBegin
+          : l10n.preparingFirstQuestion;
       return _buildPlaceholderCard(header, subtitle);
     }
 
@@ -895,11 +1164,12 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   }
 
   Widget _buildAnswerHint() {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       key: const ValueKey('answerHint'),
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Text(
-        'Tocca "Mostra soluzione" quando vuoi.',
+        l10n.answerHint,
         textAlign: TextAlign.center,
         style: Theme.of(context)
             .textTheme
@@ -910,6 +1180,9 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   }
 
   Widget _buildBottomControls() {
+    final bool canNavigate = _sessionActive && _hasQuestion;
+    final bool showSolutionStep = _hasQuestion && !_answerVisible;
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -917,20 +1190,6 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _hasQuestion ? _toggleAnswer : null,
-                icon: Icon(
-                  _answerVisible ? Icons.visibility_off : Icons.visibility,
-                  size: 18,
-                ),
-                label: Text(
-                  _answerVisible ? 'Nascondi soluzione' : 'Mostra soluzione',
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
@@ -940,15 +1199,24 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                             ? _previousQuestion
                             : null,
                     icon: const Icon(Icons.arrow_back, size: 20),
-                    label: const Text('Indietro'),
+                    label: Text(l10n.backButton),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _sessionActive ? _nextQuestion : null,
-                    icon: const Icon(Icons.arrow_forward, size: 20),
-                    label: const Text('Avanti'),
+                    onPressed: canNavigate ? _handleForwardAction : null,
+                    icon: Icon(
+                      showSolutionStep
+                          ? Icons.visibility
+                          : Icons.arrow_forward,
+                      size: 20,
+                    ),
+                    label: Text(
+                      showSolutionStep
+                          ? l10n.showSolutionButton
+                          : l10n.nextButton,
+                    ),
                   ),
                 ),
               ],
@@ -961,10 +1229,37 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     );
   }
 
-  void _toggleAnswer() {
+  void _handleForwardAction() {
+    if (!_sessionActive || !_hasQuestion) {
+      return;
+    }
+    if (!_answerVisible) {
+      _revealAnswer();
+      return;
+    }
+    _nextQuestion();
+  }
+
+  void _revealAnswer() {
+    if (_answerVisible || !_hasQuestion) {
+      return;
+    }
     setState(() {
-      _answerVisible = !_answerVisible;
+      _answerVisible = true;
+      _markAnswerVisible();
     });
+  }
+
+  void _markAnswerVisible() {
+    if (_historyIndex < 0 || _historyIndex >= _questionHistory.length) {
+      return;
+    }
+    final current = _questionHistory[_historyIndex];
+    if (current.answerVisible) {
+      return;
+    }
+    _questionHistory[_historyIndex] =
+        current.copyWith(answerVisible: true);
   }
 
   Widget _buildProgressRow() {
@@ -977,7 +1272,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     return Row(
       children: [
         Text(
-          'Domanda $current/$_sessionGoal',
+          '$current',
           style: Theme.of(context).textTheme.labelSmall,
         ),
         const SizedBox(width: 12),
@@ -997,6 +1292,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   }
 
   Widget _buildProPill() {
+    final l10n = AppLocalizations.of(context)!;
     return FadeTransition(
       opacity: Tween(begin: 0.85, end: 1.0).animate(_proPulse),
       child: ScaleTransition(
@@ -1021,12 +1317,12 @@ class _TrainerHomePageState extends State<TrainerHomePage>
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(Icons.bolt, size: 16, color: Colors.black),
-                SizedBox(width: 6),
+              children: [
+                const Icon(Icons.bolt, size: 16, color: Colors.black),
+                const SizedBox(width: 6),
                 Text(
-                  'Passa a Pro',
-                  style: TextStyle(
+                  l10n.proPill,
+                  style: const TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.w800,
                   ),
@@ -1040,6 +1336,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   }
 
   Widget _buildProBanner() {
+    final l10n = AppLocalizations.of(context)!;
     return InkWell(
       onTap: _showProUpsell,
       borderRadius: BorderRadius.circular(16),
@@ -1059,7 +1356,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Pro: sblocca le regole bloccate e nuovi verbi.',
+                l10n.proBannerText,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.black,
                       fontWeight: FontWeight.w700,
@@ -1073,9 +1370,9 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                 color: Colors.black.withOpacity(0.18),
                 borderRadius: BorderRadius.circular(999),
               ),
-              child: const Text(
-                'Passa a Pro',
-                style: TextStyle(
+              child: Text(
+                l10n.proBannerCta,
+                style: const TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.w800,
                   fontSize: 11,
@@ -1110,6 +1407,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     showDialog<void>(
       context: context,
       builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
         return Dialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
@@ -1135,12 +1433,12 @@ class _TrainerHomePageState extends State<TrainerHomePage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  children: const [
-                    Icon(Icons.auto_awesome, color: Colors.black, size: 20),
-                    SizedBox(width: 8),
+                  children: [
+                    const Icon(Icons.auto_awesome, color: Colors.black, size: 20),
+                    const SizedBox(width: 8),
                     Text(
-                      'Mini guida',
-                      style: TextStyle(
+                      l10n.tutorialTitle,
+                      style: const TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.w800,
                         fontSize: 18,
@@ -1151,12 +1449,12 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                 const SizedBox(height: 14),
                 _buildTutorialLine(
                   Icons.check_circle,
-                  'Scegli una regola grammaticale e esercitati.',
+                  l10n.tutorialLine1,
                 ),
                 const SizedBox(height: 10),
                 _buildTutorialLine(
                   Icons.arrow_forward,
-                  'Pensa alla risposta e poi mostra la soluzione.',
+                  l10n.tutorialLine2,
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -1167,7 +1465,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                       backgroundColor: Colors.black,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('Ok, si parte'),
+                    child: Text(l10n.tutorialButton),
                   ),
                 ),
               ],
@@ -1199,11 +1497,11 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   }
 
   void _showProUpsell() {
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-            'Passa a Pro per sbloccare le regole bloccate e nuovi verbi.'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(l10n.proUpsellSnackbar),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -1347,7 +1645,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
 
   void _stopSession() {
     setState(() {
-      _sessionActive = false;
+      _resetSessionProgress();
     });
   }
 
@@ -1363,7 +1661,6 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       setState(() {
         _historyIndex++;
         _applySnapshot(_questionHistory[_historyIndex]);
-        _answerVisible = false;
       });
       return;
     }
@@ -1377,7 +1674,6 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     setState(() {
       _historyIndex--;
       _applySnapshot(_questionHistory[_historyIndex]);
-      _answerVisible = false;
     });
   }
 
@@ -1408,13 +1704,13 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       verb: verb,
       answer: answer,
       answerReading: answerReading,
+      answerVisible: false,
     );
 
     setState(() {
       _questionHistory.add(snapshot);
       _historyIndex = _questionHistory.length - 1;
       _applySnapshot(snapshot);
-      _answerVisible = false;
     });
   }
 
@@ -1423,6 +1719,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     _currentVerb = snapshot.verb;
     _currentAnswer = snapshot.answer;
     _currentAnswerReading = snapshot.answerReading;
+    _answerVisible = snapshot.answerVisible;
   }
 
   int _currentQuestionNumber() {
@@ -1442,6 +1739,185 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     _questionHistory.clear();
     _historyIndex = -1;
     _answerVisible = false;
+  }
+}
+
+class _LanguageOption {
+  const _LanguageOption(this.code, this.title, [this.subtitle]);
+
+  final String? code;
+  final String title;
+  final String? subtitle;
+}
+
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({
+    super.key,
+    required this.localeOverride,
+    required this.onLocaleChanged,
+  });
+
+  final Locale? localeOverride;
+  final ValueChanged<Locale?> onLocaleChanged;
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  String? _selectedCode;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCode = widget.localeOverride?.languageCode;
+  }
+
+  @override
+  void didUpdateWidget(SettingsPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldCode = oldWidget.localeOverride?.languageCode;
+    final newCode = widget.localeOverride?.languageCode;
+    if (oldCode != newCode) {
+      _selectedCode = newCode;
+    }
+  }
+
+  Future<void> _openFeedbackForm() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final uri = Uri.parse(_feedbackUrl);
+    bool launched = false;
+    try {
+      launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (_) {
+      launched = false;
+    }
+    if (!mounted) {
+      return;
+    }
+    if (!launched) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.reportProblemError)),
+      );
+    }
+  }
+
+  void _updateLocale(String? code) {
+    setState(() {
+      _selectedCode = code;
+    });
+    widget.onLocaleChanged(_localeFromCode(code));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final String? selectedCode = _selectedCode;
+    final options = <_LanguageOption>[
+      _LanguageOption(
+        null,
+        l10n.languageSystem,
+        l10n.languageSystemSubtitle,
+      ),
+      _LanguageOption('en', l10n.languageEnglish),
+      _LanguageOption('it', l10n.languageItalian),
+      _LanguageOption('fr', l10n.languageFrench),
+      _LanguageOption('es', l10n.languageSpanish),
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.settingsTitle),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [_bgDeep, Color(0xFF1A1C20)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [_bgDeep, Color(0xFF1B1D22)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+            ),
+            ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.settingsLanguageTitle,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          l10n.settingsLanguageSubtitle,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.hintColor,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        for (int i = 0; i < options.length; i++) ...[
+                          if (i > 0) const Divider(height: 1),
+                          RadioListTile<String?>(
+                            value: options[i].code,
+                            groupValue: selectedCode,
+                            onChanged: _updateLocale,
+                            title: Text(options[i].title),
+                            subtitle: options[i].subtitle == null
+                                ? null
+                                : Text(options[i].subtitle!),
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.report_problem_outlined,
+                      color: _accentCoral,
+                    ),
+                    title: Text(l10n.reportProblemTitle),
+                    subtitle: Text(l10n.reportProblemSubtitle),
+                    trailing: const Icon(Icons.open_in_new),
+                    onTap: _openFeedbackForm,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
