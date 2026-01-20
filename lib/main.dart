@@ -1,6 +1,10 @@
-﻿import 'dart:math';
+import 'dart:async';
+import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:perapera_trainer/l10n/app_localizations.dart';
 import 'package:perapera_trainer/trainer_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,7 +17,7 @@ void main() {
 }
 
 const String _localeOverrideKey = 'perapera_locale_override';
-const String _feedbackUrl = 'https://forms.gle/JkDD8zSeN3fJQ8hv9';
+const String _feedbackUrl = 'https://forms.gle/1e1KPDdEjx6XqkF1A';
 const Locale _fallbackLocale = Locale('en');
 
 Locale? _localeFromCode(String? code) {
@@ -193,6 +197,9 @@ const Color _proGold = Color(0xFFFFC857);
 const Color _proPink = Color(0xFFFF5E91);
 const int _sessionGoal = 20;
 const String _tutorialSeenKey = 'perapera_tutorial_seen';
+const String _proTierKey = 'perapera_tier_pro';
+const String _proProductId = 'perapera_pro';
+const String _proFallbackPrice = '€4,78';
 
 class PracticeDeck {
   const PracticeDeck.verbs(this.mode)
@@ -276,38 +283,38 @@ class _VerbRule {
 
 const Map<String, String> _godanIMap = <String, String>{
   'う': 'い',
-  'つ': 'ち',
-  'る': 'り',
   'く': 'き',
   'ぐ': 'ぎ',
   'す': 'し',
+  'つ': 'ち',
+  'ぬ': 'に',
   'ぶ': 'び',
   'む': 'み',
-  'ぬ': 'に',
+  'る': 'り',
 };
 
 const Map<String, String> _godanOMap = <String, String>{
   'う': 'おう',
-  'つ': 'とう',
-  'る': 'ろう',
   'く': 'こう',
   'ぐ': 'ごう',
   'す': 'そう',
+  'つ': 'とう',
+  'ぬ': 'のう',
   'ぶ': 'ぼう',
   'む': 'もう',
-  'ぬ': 'のう',
+  'る': 'ろう',
 };
 
 const Map<String, String> _godanEMap = <String, String>{
   'う': 'えば',
-  'つ': 'てば',
-  'る': 'れば',
   'く': 'けば',
   'ぐ': 'げば',
   'す': 'せば',
+  'つ': 'てば',
+  'ぬ': 'ねば',
   'ぶ': 'べば',
   'む': 'めば',
-  'ぬ': 'ねば',
+  'る': 'れば',
 };
 
 String _teSurface(VerbEntry verb) =>
@@ -374,7 +381,7 @@ String _volitionalSurface(VerbEntry verb) {
     case VerbClass.suru:
       return 'しよう';
     case VerbClass.kuru:
-      return '来よう';
+      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}よう';
     case VerbClass.suruCompound:
       final String prefix =
           verb.dictionary.substring(0, verb.dictionary.length - 2);
@@ -414,7 +421,7 @@ String _baSurface(VerbEntry verb) {
     case VerbClass.suru:
       return 'すれば';
     case VerbClass.kuru:
-      return 'くれば';
+      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}れば';
     case VerbClass.suruCompound:
       final String prefix =
           verb.dictionary.substring(0, verb.dictionary.length - 2);
@@ -433,7 +440,7 @@ String _baReading(VerbEntry verb) {
     case VerbClass.suru:
       return 'すれば';
     case VerbClass.kuru:
-      return 'くれば';
+      return '${verb.reading.substring(0, verb.reading.length - 1)}れば';
     case VerbClass.suruCompound:
       final String prefix =
           verb.reading.substring(0, verb.reading.length - 2);
@@ -476,15 +483,15 @@ final Map<String, _VerbRule> _customRules = <String, _VerbRule>{
   ),
   '~tara': _VerbRule(
     title: '~tara',
-    buildAnswer: (verb) => '${_taSurface(verb)}らどうですか',
-    buildReading: (verb) => '${_taReading(verb)}らどうですか',
+    buildAnswer: (verb) => '${_taSurface(verb)}ら',
+    buildReading: (verb) => '${_taReading(verb)}ら',
   ),
   'number + mo / shika': _VerbRule(
     title: 'number + mo / shika',
     buildAnswer: (verb) =>
-        '一回も${_naiSurface(verb)} / 一回しか${_naiSurface(verb)}',
+        '一つも${_naiSurface(verb)} / 一つしか${_naiSurface(verb)}',
     buildReading: (verb) =>
-        'いっかいも${_naiReading(verb)} / いっかいしか${_naiReading(verb)}',
+        'ひとつも${_naiReading(verb)} / ひとつしか${_naiReading(verb)}',
   ),
   'Volitiva': _VerbRule(
     title: 'Volitiva',
@@ -493,8 +500,8 @@ final Map<String, _VerbRule> _customRules = <String, _VerbRule>{
   ),
   'Volitivo + to omotte': _VerbRule(
     title: 'Volitivo + to omotte',
-    buildAnswer: (verb) => '${_volitionalSurface(verb)}と思っています',
-    buildReading: (verb) => '${_volitionalReading(verb)}とおもっています',
+    buildAnswer: (verb) => '${_volitionalSurface(verb)}と思って',
+    buildReading: (verb) => '${_volitionalReading(verb)}とおもって',
   ),
   '~te oku': _VerbRule(
     title: '~te oku',
@@ -503,8 +510,8 @@ final Map<String, _VerbRule> _customRules = <String, _VerbRule>{
   ),
   'Relative': _VerbRule(
     title: 'Relative',
-    buildAnswer: (verb) => '${verb.dictionary}人',
-    buildReading: (verb) => '${verb.reading}ひと',
+    buildAnswer: (verb) => '${verb.dictionary}時',
+    buildReading: (verb) => '${verb.reading}とき',
   ),
   '~nagara': _VerbRule(
     title: '~nagara',
@@ -522,6 +529,7 @@ const Set<TrainerMode> _freeVerbModes = <TrainerMode>{
   TrainerMode.te,
   TrainerMode.ta,
   TrainerMode.nai,
+  TrainerMode.masu,
   TrainerMode.potential,
   TrainerMode.kamo,
 };
@@ -534,14 +542,14 @@ const Set<String> _freeRuleTitles = <String>{
 
 class _TrainerHomePageState extends State<TrainerHomePage>
     with SingleTickerProviderStateMixin {
-  late final TrainerEngine _engine;
+  late TrainerEngine _engine;
 
-  final AppTier _tier = AppTier.free;
+  AppTier _tier = AppTier.free;
 
   late final AnimationController _proPulseController;
   late final Animation<double> _proPulse;
 
-  late final List<PracticeDeck> _decks;
+  late List<PracticeDeck> _decks;
   PracticeDeck? _selectedDeck;
   TrainerMode? _currentQuestionMode;
   VerbEntry? _currentVerb;
@@ -555,13 +563,18 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   bool _answerVisible = false;
   int _questionCounter = 0;
 
+  final InAppPurchase _iap = InAppPurchase.instance;
+  StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
+  ProductDetails? _proProduct;
+  bool _storeAvailable = false;
+  bool _purchasePending = false;
+  String? _storeError;
+  String? _pendingDeckId;
+
   @override
   void initState() {
     super.initState();
-    final bool includePremiumVerbs = enablePremiumVerbs && _isProUser;
-    _engine = TrainerEngine(
-      verbs: includePremiumVerbs ? verbList : freeVerbList,
-    );
+    _engine = _buildEngineForTier(_tier);
     _proPulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 6),
@@ -573,10 +586,13 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     _decks = _buildDecks();
     _selectedDeck = _decks.isNotEmpty ? _decks.first : null;
     _maybeShowTutorial();
+    _loadTier();
+    _initInAppPurchase();
   }
 
   @override
   void dispose() {
+    _purchaseSubscription?.cancel();
     _proPulseController.dispose();
     super.dispose();
   }
@@ -586,6 +602,213 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       return false;
     }
     return _isDeckAvailable(deck);
+  }
+
+  TrainerEngine _buildEngineForTier(AppTier tier) {
+    final bool includePremiumVerbs = enablePremiumVerbs && tier == AppTier.pro;
+    return TrainerEngine(
+      verbs: includePremiumVerbs ? verbList : freeVerbList,
+    );
+  }
+
+  void _initInAppPurchase() {
+    if (kIsWeb) {
+      setState(() {
+        _storeAvailable = false;
+        _storeError = 'web_not_supported';
+      });
+      return;
+    }
+    _purchaseSubscription = _iap.purchaseStream.listen(
+      _listenToPurchaseUpdated,
+      onDone: () => _purchaseSubscription?.cancel(),
+      onError: (Object error) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _storeError = error.toString();
+        });
+      },
+    );
+    _loadStoreProducts();
+  }
+
+  Future<void> _loadStoreProducts() async {
+    try {
+      final bool available = await _iap.isAvailable();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _storeAvailable = available;
+      });
+      if (!available) {
+        return;
+      }
+      final response = await _iap.queryProductDetails({_proProductId});
+      if (!mounted) {
+        return;
+      }
+      if (response.error != null) {
+        setState(() {
+          _storeError = response.error!.message;
+        });
+        return;
+      }
+      if (response.productDetails.isEmpty) {
+        setState(() {
+          _storeError = 'product_not_found';
+        });
+        return;
+      }
+      setState(() {
+        _proProduct = response.productDetails.first;
+        _storeError = null;
+      });
+    } on PlatformException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _storeAvailable = false;
+        _storeError = error.message ?? error.code;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _storeAvailable = false;
+        _storeError = error.toString();
+      });
+    }
+  }
+
+  Future<void> _listenToPurchaseUpdated(
+    List<PurchaseDetails> purchaseDetailsList,
+  ) async {
+    for (final purchaseDetails in purchaseDetailsList) {
+      if (purchaseDetails.status == PurchaseStatus.pending) {
+        if (mounted) {
+          setState(() {
+            _purchasePending = true;
+          });
+        }
+        continue;
+      }
+
+      if (purchaseDetails.status == PurchaseStatus.error) {
+        if (mounted) {
+          setState(() {
+            _purchasePending = false;
+          });
+          _showPurchaseError();
+        }
+      } else if (purchaseDetails.status == PurchaseStatus.purchased ||
+          purchaseDetails.status == PurchaseStatus.restored) {
+        final bool valid = await _verifyPurchase(purchaseDetails);
+        if (valid) {
+          await _deliverPro();
+        }
+      }
+
+      if (purchaseDetails.pendingCompletePurchase) {
+        await _iap.completePurchase(purchaseDetails);
+      }
+
+      if (mounted) {
+        setState(() {
+          _purchasePending = false;
+        });
+      }
+    }
+  }
+
+  Future<bool> _verifyPurchase(PurchaseDetails purchaseDetails) async {
+    return purchaseDetails.productID == _proProductId;
+  }
+
+  Future<void> _deliverPro() async {
+    final String? pendingId = _pendingDeckId;
+    _pendingDeckId = null;
+    await _setTier(AppTier.pro, selectDeck: _findDeckById(pendingId));
+  }
+
+  Future<void> _buyPro() async {
+    if (_purchasePending) {
+      return;
+    }
+    if (!_storeAvailable || _proProduct == null) {
+      _showStoreUnavailable();
+      return;
+    }
+    setState(() {
+      _purchasePending = true;
+    });
+    final purchaseParam = PurchaseParam(productDetails: _proProduct!);
+    try {
+      await _iap.buyNonConsumable(purchaseParam: purchaseParam);
+    } on PlatformException {
+      if (mounted) {
+        setState(() {
+          _purchasePending = false;
+        });
+        _showPurchaseError();
+      }
+    }
+  }
+
+  Future<void> _restorePurchases() async {
+    if (!_storeAvailable) {
+      _showStoreUnavailable();
+      return;
+    }
+    try {
+      await _iap.restorePurchases();
+    } on PlatformException {
+      if (mounted) {
+        _showPurchaseError();
+      }
+    }
+  }
+
+  Future<void> _loadTier() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool isPro = prefs.getBool(_proTierKey) ?? false;
+    if (!mounted) {
+      return;
+    }
+    if (isPro && _tier != AppTier.pro) {
+      _applyTier(AppTier.pro);
+    }
+  }
+
+  void _applyTier(AppTier tier, {PracticeDeck? selectDeck}) {
+    setState(() {
+      _tier = tier;
+      _engine = _buildEngineForTier(tier);
+      _decks = _buildDecks();
+      final String? preferredId = selectDeck?.id ?? _selectedDeck?.id;
+      final PracticeDeck? preferredDeck = _findDeckById(preferredId);
+      if (preferredDeck != null && _isDeckAvailable(preferredDeck)) {
+        _selectedDeck = preferredDeck;
+      } else {
+        _selectedDeck = _decks.isNotEmpty ? _decks.first : null;
+      }
+    });
+  }
+
+  PracticeDeck? _findDeckById(String? id) {
+    if (id == null) {
+      return null;
+    }
+    for (final deck in _decks) {
+      if (deck.id == id) {
+        return deck;
+      }
+    }
+    return null;
   }
 
   List<PracticeDeck> _buildDecks() {
@@ -639,6 +862,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         return l10n.modeTa;
       case TrainerMode.nai:
         return l10n.modeNai;
+      case TrainerMode.masu:
+        return l10n.modeMasu;
       case TrainerMode.potential:
         return l10n.modePotential;
       case TrainerMode.mix:
@@ -681,6 +906,19 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       default:
         return ruleKey;
     }
+  }
+
+  List<String> _proRuleLabels(AppLocalizations l10n) {
+    return _customRules.keys
+        .where((ruleKey) => !_freeRuleTitles.contains(ruleKey))
+        .map((ruleKey) => _ruleLabel(ruleKey, l10n))
+        .toList();
+  }
+
+  List<String> _premiumVerbLabels() {
+    return premiumVerbList
+        .map((verb) => '${verb.dictionary} (${verb.reading})')
+        .toList();
   }
 
   bool get _isProUser => _tier == AppTier.pro;
@@ -761,6 +999,17 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.appTitle, style: titleStyle),
+          leadingWidth:
+              (!_sessionActive && showProBanners && !_isProUser) ? 156 : null,
+          leading: (!_sessionActive && showProBanners && !_isProUser)
+              ? Padding(
+                  padding: const EdgeInsets.only(left: 12),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: _buildProPill(),
+                  ),
+                )
+              : null,
           flexibleSpace: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -784,11 +1033,6 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                 style: TextButton.styleFrom(
                   foregroundColor: _accentCoral,
                 ),
-              ),
-            if (!_sessionActive && showProBanners && !_isProUser)
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: _buildProPill(),
               ),
           ],
         ),
@@ -892,6 +1136,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         builder: (context) => SettingsPage(
           localeOverride: widget.localeOverride,
           onLocaleChanged: widget.onLocaleChanged,
+          currentTier: _tier,
+          onTierChanged: _setTier,
         ),
       ),
     );
@@ -948,7 +1194,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                   icon: const Icon(Icons.expand_more),
                   onChanged: (value) {
                     if (value == null) return;
-                    _selectDeck(value);
+                    _handleDeckSelection(value);
                   },
                   items: _deckDropdownItems(context),
                 ),
@@ -1011,9 +1257,10 @@ class _TrainerHomePageState extends State<TrainerHomePage>
             final bool showPro = showBadges && !isAvailable;
             final bool showFree = showBadges && isAvailable;
             final deckLabel = _deckLabel(deck, l10n);
+            final Color proBadgeColor =
+                isAvailable ? _proGold : disabledColor;
             return DropdownMenuItem<PracticeDeck>(
               value: deck,
-              enabled: isAvailable,
               child: Row(
                 children: [
                   Expanded(
@@ -1047,16 +1294,16 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.star,
-                          color: _proGold,
+                          color: proBadgeColor,
                           size: 16,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           l10n.badgePro,
                           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: _proGold,
+                                color: proBadgeColor,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
                               ),
@@ -1076,6 +1323,14 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       _selectedDeck = deck;
     });
     _resetSessionProgress();
+  }
+
+  void _handleDeckSelection(PracticeDeck deck) {
+    if (!_isDeckAvailable(deck)) {
+      _showProUpsell(pendingDeck: deck);
+      return;
+    }
+    _selectDeck(deck);
   }
 
   Widget _buildQuestionCard() {
@@ -1496,14 +1751,66 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     );
   }
 
-  void _showProUpsell() {
+  void _showStoreUnavailable() {
     final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.proUpsellSnackbar),
-        duration: const Duration(seconds: 2),
+      SnackBar(content: Text(l10n.proStoreUnavailable)),
+    );
+  }
+
+  void _showPurchaseError() {
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.proPurchaseError)),
+    );
+  }
+
+  void _showProUpsell({PracticeDeck? pendingDeck}) {
+    if (_isProUser || !premiumEnabled) {
+      return;
+    }
+    _pendingDeckId = pendingDeck?.id;
+    final l10n = AppLocalizations.of(context)!;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProUpsellPage(
+          title: l10n.proPill,
+          subtitle: l10n.proBannerText,
+          priceLabel: _proProduct?.price ?? _proFallbackPrice,
+          oneTimeLabel: l10n.proOneTimeLabel,
+          ctaLabel: l10n.proBannerCta,
+          storeUnavailableLabel: l10n.proStoreUnavailable,
+          purchasePendingLabel: l10n.proPurchaseInProgress,
+          alreadyUnlockedLabel: l10n.proAlreadyUnlocked,
+          benefitsTitle: l10n.proBenefitsTitle,
+          benefits: [
+            l10n.proBenefitRules,
+            l10n.proBenefitVerbs,
+            l10n.proBenefitSupport,
+          ],
+          rulesTitle: l10n.proRulesTitle,
+          rules: _proRuleLabels(l10n),
+          verbsTitle: l10n.proVerbsTitle,
+          verbs: _premiumVerbLabels(),
+          restoreLabel: l10n.proRestoreButton,
+          isProUser: _isProUser,
+          purchasePending: _purchasePending,
+          storeReady: _storeAvailable && _proProduct != null,
+          storeError: _storeError,
+          onBuy: _buyPro,
+          onRestore: _restorePurchases,
+        ),
       ),
     );
+  }
+
+  Future<void> _setTier(AppTier tier, {PracticeDeck? selectDeck}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_proTierKey, tier == AppTier.pro);
+    if (!mounted) {
+      return;
+    }
+    _applyTier(tier, selectDeck: selectDeck);
   }
 
   Widget _buildPlaceholderCard(String title, String subtitle) {
@@ -1628,6 +1935,9 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   void _startSession() {
     final deck = _selectedDeck;
     if (!_canPracticeDeck(deck)) {
+      if (deck != null && !_isDeckAvailable(deck)) {
+        _showProUpsell(pendingDeck: deck);
+      }
       return;
     }
     setState(() {
@@ -1755,10 +2065,14 @@ class SettingsPage extends StatefulWidget {
     super.key,
     required this.localeOverride,
     required this.onLocaleChanged,
+    required this.currentTier,
+    required this.onTierChanged,
   });
 
   final Locale? localeOverride;
   final ValueChanged<Locale?> onLocaleChanged;
+  final AppTier currentTier;
+  final Future<void> Function(AppTier tier) onTierChanged;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -1766,11 +2080,13 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   String? _selectedCode;
+  bool _debugProEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _selectedCode = widget.localeOverride?.languageCode;
+    _debugProEnabled = widget.currentTier == AppTier.pro;
   }
 
   @override
@@ -1781,6 +2097,9 @@ class _SettingsPageState extends State<SettingsPage> {
     if (oldCode != newCode) {
       _selectedCode = newCode;
     }
+    if (oldWidget.currentTier != widget.currentTier) {
+      _debugProEnabled = widget.currentTier == AppTier.pro;
+    }
   }
 
   Future<void> _openFeedbackForm() async {
@@ -1789,10 +2108,24 @@ class _SettingsPageState extends State<SettingsPage> {
     final uri = Uri.parse(_feedbackUrl);
     bool launched = false;
     try {
-      launched = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
+      if (kIsWeb) {
+        launched = await launchUrl(
+          uri,
+          mode: LaunchMode.platformDefault,
+          webOnlyWindowName: '_blank',
+        );
+      } else {
+        launched = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+        if (!launched) {
+          launched = await launchUrl(
+            uri,
+            mode: LaunchMode.platformDefault,
+          );
+        }
+      }
     } catch (_) {
       launched = false;
     }
@@ -1811,6 +2144,13 @@ class _SettingsPageState extends State<SettingsPage> {
       _selectedCode = code;
     });
     widget.onLocaleChanged(_localeFromCode(code));
+  }
+
+  Future<void> _toggleDebugPro(bool enabled) async {
+    setState(() {
+      _debugProEnabled = enabled;
+    });
+    await widget.onTierChanged(enabled ? AppTier.pro : AppTier.free);
   }
 
   @override
@@ -1900,6 +2240,42 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                if (kDebugMode) ...[
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Developer',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Enable Pro access for testing.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.hintColor,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          SwitchListTile.adaptive(
+                            value: _debugProEnabled,
+                            onChanged: _toggleDebugPro,
+                            title: const Text('Pro access'),
+                            subtitle: const Text(
+                              'Simulate a Pro purchase on this device.',
+                            ),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 Card(
                   child: ListTile(
                     leading: const Icon(
@@ -1920,4 +2296,292 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 }
+
+class ProUpsellPage extends StatelessWidget {
+  const ProUpsellPage({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.priceLabel,
+    required this.oneTimeLabel,
+    required this.ctaLabel,
+    required this.storeUnavailableLabel,
+    required this.purchasePendingLabel,
+    required this.alreadyUnlockedLabel,
+    required this.benefitsTitle,
+    required this.benefits,
+    required this.rulesTitle,
+    required this.rules,
+    required this.verbsTitle,
+    required this.verbs,
+    required this.restoreLabel,
+    required this.isProUser,
+    required this.purchasePending,
+    required this.storeReady,
+    required this.storeError,
+    required this.onBuy,
+    required this.onRestore,
+  });
+
+  final String title;
+  final String subtitle;
+  final String priceLabel;
+  final String oneTimeLabel;
+  final String ctaLabel;
+  final String storeUnavailableLabel;
+  final String purchasePendingLabel;
+  final String alreadyUnlockedLabel;
+  final String benefitsTitle;
+  final List<String> benefits;
+  final String rulesTitle;
+  final List<String> rules;
+  final String verbsTitle;
+  final List<String> verbs;
+  final String restoreLabel;
+  final bool isProUser;
+  final bool purchasePending;
+  final bool storeReady;
+  final String? storeError;
+  final VoidCallback onBuy;
+  final VoidCallback onRestore;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final String priceText = '$priceLabel • $oneTimeLabel';
+    final bool canBuy = storeReady && !purchasePending && !isProUser;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [_bgDeep, Color(0xFF1A1C20)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [_bgDeep, Color(0xFF1B1D22)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+            ),
+            ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [_proGold, _proPink],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x55000000),
+                        blurRadius: 18,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.bolt, color: Colors.black, size: 22),
+                          const SizedBox(width: 8),
+                          Text(
+                            title,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.black87,
+                          height: 1.4,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        priceText,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _sectionTitle(context, benefitsTitle),
+                const SizedBox(height: 8),
+                for (final benefit in benefits)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.check_circle,
+                          color: _accentCool,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            benefit,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                _sectionTitle(context, rulesTitle),
+                const SizedBox(height: 8),
+                _chipWrap(context, rules),
+                const SizedBox(height: 12),
+                _sectionTitle(context, verbsTitle),
+                const SizedBox(height: 8),
+                _chipWrap(context, verbs),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: storeReady ? onRestore : null,
+                  child: Text(restoreLabel),
+                ),
+                if (!storeReady) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    storeUnavailableLabel,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ],
+                if (kDebugMode && storeError != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    storeError!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isProUser)
+                Text(
+                  alreadyUnlockedLabel,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: _accentCool,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              if (purchasePending)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    purchasePendingLabel,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: canBuy ? onBuy : null,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: purchasePending
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(ctaLabel),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionTitle(BuildContext context, String text) {
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+    );
+  }
+
+  Widget _chipWrap(BuildContext context, List<String> items) {
+    final theme = Theme.of(context);
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: items
+          .map(
+            (item) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _bgCardAlt,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: Colors.white.withOpacity(0.06)),
+              ),
+              child: Text(
+                item,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+
+
+
+
 

@@ -105,7 +105,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'pera pera'**
+  /// **'ペラペラ'**
   String get appTitle;
 
   /// No description provided for @settingsTitle.
@@ -276,6 +276,78 @@ abstract class AppLocalizations {
   /// **'Go Pro to unlock locked rules and new verbs.'**
   String get proUpsellSnackbar;
 
+  /// No description provided for @proBenefitsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro benefits'**
+  String get proBenefitsTitle;
+
+  /// No description provided for @proBenefitRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock all locked rules.'**
+  String get proBenefitRules;
+
+  /// No description provided for @proBenefitVerbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Get the full premium verb list.'**
+  String get proBenefitVerbs;
+
+  /// No description provided for @proBenefitSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Support the development of PeraPera.'**
+  String get proBenefitSupport;
+
+  /// No description provided for @proRulesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro rules'**
+  String get proRulesTitle;
+
+  /// No description provided for @proVerbsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium verbs'**
+  String get proVerbsTitle;
+
+  /// No description provided for @proOneTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time purchase'**
+  String get proOneTimeLabel;
+
+  /// No description provided for @proRestoreButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore purchases'**
+  String get proRestoreButton;
+
+  /// No description provided for @proStoreUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Store unavailable. Try again later.'**
+  String get proStoreUnavailable;
+
+  /// No description provided for @proPurchaseInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase in progress...'**
+  String get proPurchaseInProgress;
+
+  /// No description provided for @proPurchaseError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to complete the purchase.'**
+  String get proPurchaseError;
+
+  /// No description provided for @proAlreadyUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro is already active on this device.'**
+  String get proAlreadyUnlocked;
+
   /// No description provided for @tutorialTitle.
   ///
   /// In en, this message translates to:
@@ -315,25 +387,31 @@ abstract class AppLocalizations {
   /// No description provided for @modeTe.
   ///
   /// In en, this message translates to:
-  /// **'te form'**
+  /// **'~te form'**
   String get modeTe;
 
   /// No description provided for @modeTa.
   ///
   /// In en, this message translates to:
-  /// **'ta form'**
+  /// **'~ta form'**
   String get modeTa;
 
   /// No description provided for @modeNai.
   ///
   /// In en, this message translates to:
-  /// **'nai form'**
+  /// **'~nai form'**
   String get modeNai;
+
+  /// No description provided for @modeMasu.
+  ///
+  /// In en, this message translates to:
+  /// **'~masu form'**
+  String get modeMasu;
 
   /// No description provided for @modePotential.
   ///
   /// In en, this message translates to:
-  /// **'potential form'**
+  /// **'~potential form'**
   String get modePotential;
 
   /// No description provided for @modeMix.
@@ -345,7 +423,7 @@ abstract class AppLocalizations {
   /// No description provided for @modeKamo.
   ///
   /// In en, this message translates to:
-  /// **'kamo form'**
+  /// **'~kamo form'**
   String get modeKamo;
 
   /// No description provided for @ruleShi.

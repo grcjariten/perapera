@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'pera pera';
+  String get appTitle => 'ペラペラ';
 
   @override
   String get settingsTitle => 'Settings';
@@ -98,6 +98,42 @@ class AppLocalizationsEn extends AppLocalizations {
       'Go Pro to unlock locked rules and new verbs.';
 
   @override
+  String get proBenefitsTitle => 'Pro benefits';
+
+  @override
+  String get proBenefitRules => 'Unlock all locked rules.';
+
+  @override
+  String get proBenefitVerbs => 'Get the full premium verb list.';
+
+  @override
+  String get proBenefitSupport => 'Support the development of PeraPera.';
+
+  @override
+  String get proRulesTitle => 'Pro rules';
+
+  @override
+  String get proVerbsTitle => 'Premium verbs';
+
+  @override
+  String get proOneTimeLabel => 'One-time purchase';
+
+  @override
+  String get proRestoreButton => 'Restore purchases';
+
+  @override
+  String get proStoreUnavailable => 'Store unavailable. Try again later.';
+
+  @override
+  String get proPurchaseInProgress => 'Purchase in progress...';
+
+  @override
+  String get proPurchaseError => 'Unable to complete the purchase.';
+
+  @override
+  String get proAlreadyUnlocked => 'Pro is already active on this device.';
+
+  @override
   String get tutorialTitle => 'Quick guide';
 
   @override
@@ -117,22 +153,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get badgePro => 'PRO';
 
   @override
-  String get modeTe => 'te form';
+  String get modeTe => '~te form';
 
   @override
-  String get modeTa => 'ta form';
+  String get modeTa => '~ta form';
 
   @override
-  String get modeNai => 'nai form';
+  String get modeNai => '~nai form';
 
   @override
-  String get modePotential => 'potential form';
+  String get modeMasu => '~masu form';
+
+  @override
+  String get modePotential => '~potential form';
 
   @override
   String get modeMix => 'random mix';
 
   @override
-  String get modeKamo => 'kamo form';
+  String get modeKamo => '~kamo form';
 
   @override
   String get ruleShi => '~shi';

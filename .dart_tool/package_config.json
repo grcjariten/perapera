@@ -122,6 +122,30 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "in_app_purchase",
+      "rootUri": "file:///C:/Users/grcja/AppData/Local/Pub/Cache/hosted/pub.dev/in_app_purchase-3.2.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "in_app_purchase_android",
+      "rootUri": "file:///C:/Users/grcja/AppData/Local/Pub/Cache/hosted/pub.dev/in_app_purchase_android-0.4.0+8",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
+    },
+    {
+      "name": "in_app_purchase_platform_interface",
+      "rootUri": "file:///C:/Users/grcja/AppData/Local/Pub/Cache/hosted/pub.dev/in_app_purchase_platform_interface-1.4.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.1"
+    },
+    {
+      "name": "in_app_purchase_storekit",
+      "rootUri": "file:///C:/Users/grcja/AppData/Local/Pub/Cache/hosted/pub.dev/in_app_purchase_storekit-0.4.7",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
+    },
+    {
       "name": "intl",
       "rootUri": "file:///C:/Users/grcja/AppData/Local/Pub/Cache/hosted/pub.dev/intl-0.20.2",
       "packageUri": "lib/",

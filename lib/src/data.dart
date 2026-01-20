@@ -1,12 +1,13 @@
 ﻿import 'dart:math';
 
 enum TrainerMode {
-  te('forma て'),
-  ta('forma た'),
-  nai('forma ない'),
-  potential('forma potenziale'),
+  masu('forma ~ます'),
+  te('forma ~て'),
+  ta('forma ~た'),
+  nai('forma ~ない'),
+  potential('forma ~potenziale'),
   mix('mix casuale'),
-  kamo('forma かもしれません');
+  kamo('forma ~かもしれません');
 
   const TrainerMode(this.label);
 
@@ -22,6 +23,7 @@ enum VerbClass {
 }
 
 const List<TrainerMode> mixModes = <TrainerMode>[
+  TrainerMode.masu,
   TrainerMode.te,
   TrainerMode.ta,
   TrainerMode.nai,
@@ -63,6 +65,8 @@ class VerbEntry {
         return ta;
       case TrainerMode.nai:
         return nai;
+      case TrainerMode.masu:
+        return Conjugation(_masuSurface(), '');
       case TrainerMode.potential:
         return potential;
       case TrainerMode.kamo:
@@ -123,6 +127,43 @@ class VerbEntry {
     'ぬ': 'ね',
   };
 
+  static const Map<String, String> _godanIMap = <String, String>{
+    'う': 'い',
+    'く': 'き',
+    'ぐ': 'ぎ',
+    'す': 'し',
+    'つ': 'ち',
+    'ぬ': 'に',
+    'ぶ': 'び',
+    'む': 'み',
+    'る': 'り',
+  };
+
+  static const String _masuSuffix = 'ます';
+  static const String _suruMasu = 'します';
+  static const String _kuruMasuReading = 'きます';
+
+  String _masuSurface() {
+    switch (verbClass) {
+      case VerbClass.godan:
+        final String stem =
+            dictionary.substring(0, dictionary.length - 1);
+        final String ending =
+            dictionary.substring(dictionary.length - 1);
+        return '$stem${_godanIMap[ending] ?? ''}$_masuSuffix';
+      case VerbClass.ichidan:
+        return '${dictionary.substring(0, dictionary.length - 1)}$_masuSuffix';
+      case VerbClass.suru:
+        return _suruMasu;
+      case VerbClass.kuru:
+        return '${dictionary.substring(0, dictionary.length - 1)}$_masuSuffix';
+      case VerbClass.suruCompound:
+        final String prefix =
+            dictionary.substring(0, dictionary.length - 2);
+        return '$prefix$_suruMasu';
+    }
+  }
+
   String readingFor(TrainerMode mode) {
     switch (verbClass) {
       case VerbClass.godan:
@@ -160,6 +201,8 @@ class VerbEntry {
         return '$stem${_godanTa[ending] ?? ''}';
       case TrainerMode.nai:
         return '$stem${_godanNai[ending] ?? ''}ない';
+      case TrainerMode.masu:
+        return '$stem${_godanIMap[ending] ?? ''}$_masuSuffix';
       case TrainerMode.potential:
         return '$stem${_godanPotential[ending] ?? ''}る';
       case TrainerMode.mix:
@@ -183,6 +226,8 @@ class VerbEntry {
         return '$stemた';
       case TrainerMode.nai:
         return '$stemない';
+      case TrainerMode.masu:
+        return '$stem$_masuSuffix';
       case TrainerMode.potential:
         return '$stemられる';
       case TrainerMode.mix:
@@ -202,6 +247,8 @@ class VerbEntry {
         return '${prefix}した';
       case TrainerMode.nai:
         return '${prefix}しない';
+      case TrainerMode.masu:
+        return '$prefix$_suruMasu';
       case TrainerMode.potential:
         return '${prefix}できる';
       case TrainerMode.kamo:
@@ -222,6 +269,8 @@ class VerbEntry {
         return 'きた';
       case TrainerMode.nai:
         return 'こない';
+      case TrainerMode.masu:
+        return _kuruMasuReading;
       case TrainerMode.potential:
         return 'こられる';
       case TrainerMode.kamo:

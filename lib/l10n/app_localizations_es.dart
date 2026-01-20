@@ -9,7 +9,7 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
-  String get appTitle => 'pera pera';
+  String get appTitle => 'ペラペラ';
 
   @override
   String get settingsTitle => 'Ajustes';
@@ -101,6 +101,43 @@ class AppLocalizationsEs extends AppLocalizations {
       'Pasa a Pro para desbloquear reglas bloqueadas y nuevos verbos.';
 
   @override
+  String get proBenefitsTitle => 'Ventajas Pro';
+
+  @override
+  String get proBenefitRules => 'Desbloquea todas las reglas bloqueadas.';
+
+  @override
+  String get proBenefitVerbs => 'Accede a todos los verbos premium.';
+
+  @override
+  String get proBenefitSupport => 'Apoya el desarrollo de PeraPera.';
+
+  @override
+  String get proRulesTitle => 'Reglas Pro';
+
+  @override
+  String get proVerbsTitle => 'Verbos premium';
+
+  @override
+  String get proOneTimeLabel => 'Compra única';
+
+  @override
+  String get proRestoreButton => 'Restaurar compras';
+
+  @override
+  String get proStoreUnavailable =>
+      'Tienda no disponible. Inténtalo más tarde.';
+
+  @override
+  String get proPurchaseInProgress => 'Compra en curso...';
+
+  @override
+  String get proPurchaseError => 'No se pudo completar la compra.';
+
+  @override
+  String get proAlreadyUnlocked => 'Pro ya está activo en este dispositivo.';
+
+  @override
   String get tutorialTitle => 'Guía rápida';
 
   @override
@@ -120,22 +157,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String get badgePro => 'PRO';
 
   @override
-  String get modeTe => 'forma te';
+  String get modeTe => 'forma ~te';
 
   @override
-  String get modeTa => 'forma ta';
+  String get modeTa => 'forma ~ta';
 
   @override
-  String get modeNai => 'forma nai';
+  String get modeNai => 'forma ~nai';
 
   @override
-  String get modePotential => 'forma potencial';
+  String get modeMasu => 'forma ~masu';
+
+  @override
+  String get modePotential => 'forma ~potencial';
 
   @override
   String get modeMix => 'mezcla aleatoria';
 
   @override
-  String get modeKamo => 'forma kamo';
+  String get modeKamo => 'forma ~kamo';
 
   @override
   String get ruleShi => '~shi';
