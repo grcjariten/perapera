@@ -199,7 +199,7 @@ const int _sessionGoal = 20;
 const String _tutorialSeenKey = 'perapera_tutorial_seen';
 const String _proTierKey = 'perapera_tier_pro';
 const String _proProductId = 'perapera_pro';
-const String _proFallbackPrice = '€4,78';
+const String _proFallbackPrice = r'$4.78';
 
 class PracticeDeck {
   const PracticeDeck.verbs(this.mode)
@@ -1136,8 +1136,6 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         builder: (context) => SettingsPage(
           localeOverride: widget.localeOverride,
           onLocaleChanged: widget.onLocaleChanged,
-          currentTier: _tier,
-          onTierChanged: _setTier,
         ),
       ),
     );
@@ -2065,14 +2063,10 @@ class SettingsPage extends StatefulWidget {
     super.key,
     required this.localeOverride,
     required this.onLocaleChanged,
-    required this.currentTier,
-    required this.onTierChanged,
   });
 
   final Locale? localeOverride;
   final ValueChanged<Locale?> onLocaleChanged;
-  final AppTier currentTier;
-  final Future<void> Function(AppTier tier) onTierChanged;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -2080,13 +2074,11 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   String? _selectedCode;
-  bool _debugProEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _selectedCode = widget.localeOverride?.languageCode;
-    _debugProEnabled = widget.currentTier == AppTier.pro;
   }
 
   @override
@@ -2096,9 +2088,6 @@ class _SettingsPageState extends State<SettingsPage> {
     final newCode = widget.localeOverride?.languageCode;
     if (oldCode != newCode) {
       _selectedCode = newCode;
-    }
-    if (oldWidget.currentTier != widget.currentTier) {
-      _debugProEnabled = widget.currentTier == AppTier.pro;
     }
   }
 
@@ -2144,13 +2133,6 @@ class _SettingsPageState extends State<SettingsPage> {
       _selectedCode = code;
     });
     widget.onLocaleChanged(_localeFromCode(code));
-  }
-
-  Future<void> _toggleDebugPro(bool enabled) async {
-    setState(() {
-      _debugProEnabled = enabled;
-    });
-    await widget.onTierChanged(enabled ? AppTier.pro : AppTier.free);
   }
 
   @override
@@ -2240,42 +2222,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                if (kDebugMode) ...[
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Developer',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Enable Pro access for testing.',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.hintColor,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          SwitchListTile.adaptive(
-                            value: _debugProEnabled,
-                            onChanged: _toggleDebugPro,
-                            title: const Text('Pro access'),
-                            subtitle: const Text(
-                              'Simulate a Pro purchase on this device.',
-                            ),
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
                 Card(
                   child: ListTile(
                     leading: const Icon(
