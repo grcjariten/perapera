@@ -1,8 +1,8 @@
 name: perapera_trainer
 description: >
-  Allenamento verbi giapponesi (Genki I-II) in Flutter, con modalità CLI opzionale.
+  Allenamento verbi giapponesi in Flutter, con modalità CLI opzionale.
 publish_to: 'none'
-version: 0.1.0+6
+version: 1.0.0+7
 
 environment:
   sdk: ">=2.18.0 <4.0.0"
@@ -10,7 +10,7 @@ environment:
 
 dependencies:
   flutter:
-    sdk: flutter
+    sdk: flutterg
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2

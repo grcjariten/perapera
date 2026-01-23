@@ -218,4 +218,31 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get ruleBaForm => 'Forma ba';
+
+  @override
+  String get customDeckTitle => 'Personalizada';
+
+  @override
+  String get customDeckSubtitle => 'Elige las reglas que quieres practicar.';
+
+  @override
+  String get customDeckConfigure => 'Configurar';
+
+  @override
+  String customDeckSelectedCount(Object count) {
+    return 'Seleccionadas: $count';
+  }
+
+  @override
+  String get customDeckEmptyHint =>
+      'Selecciona al menos una regla para empezar.';
+
+  @override
+  String get customDeckModesTitle => 'Formas base';
+
+  @override
+  String get customDeckRulesTitle => 'Reglas';
+
+  @override
+  String get customDeckSave => 'Guardar';
 }

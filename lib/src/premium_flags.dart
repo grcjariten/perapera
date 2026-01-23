@@ -1,8 +1,8 @@
 // Premium feature switches.
-// Flip premiumEnabled to true to restore Pro UI and content.
-const bool premiumEnabled = false;
+// Set forceProTier to true to preview Pro content without purchases.
+const bool forceProTier = false;
 
-const bool showProBanners = premiumEnabled;
-const bool showProBadges = premiumEnabled;
-const bool showLockedDecks = premiumEnabled;
-const bool enablePremiumVerbs = premiumEnabled;
+const bool showProBanners = true;
+const bool showProBadges = true;
+const bool showLockedDecks = true;
+const bool enablePremiumVerbs = true;

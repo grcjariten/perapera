@@ -183,7 +183,7 @@ class TrainerHomePage extends StatefulWidget {
   State<TrainerHomePage> createState() => _TrainerHomePageState();
 }
 
-enum DeckKind { verbs, topic }
+enum DeckKind { verbs, topic, custom }
 
 enum AppTier { free, pro }
 
@@ -200,6 +200,11 @@ const String _tutorialSeenKey = 'perapera_tutorial_seen';
 const String _proTierKey = 'perapera_tier_pro';
 const String _proProductId = 'perapera_pro';
 const String _proFallbackPrice = r'$4.78';
+const String _customDeckId = 'custom_deck';
+const String _customDeckSelectionKey = 'perapera_custom_deck_selection';
+const String _proEntitlementCheckKey = 'perapera_pro_entitlement_check';
+const Duration _proEntitlementCheckCooldown = Duration(days: 7);
+const Duration _proEntitlementCheckTimeout = Duration(seconds: 8);
 
 class PracticeDeck {
   const PracticeDeck.verbs(this.mode)
@@ -211,6 +216,12 @@ class PracticeDeck {
       : kind = DeckKind.topic,
         mode = null;
 
+  const PracticeDeck.custom()
+      : kind = DeckKind.custom,
+        mode = null,
+        lesson = null,
+        topic = null;
+
   final DeckKind kind;
   final TrainerMode? mode;
   final Lesson? lesson;
@@ -220,12 +231,18 @@ class PracticeDeck {
     if (kind == DeckKind.verbs && mode != null) {
       return mode!.label;
     }
+    if (kind == DeckKind.custom) {
+      return '';
+    }
     return topic?.title ?? '';
   }
 
   String get id {
     if (kind == DeckKind.verbs && mode != null) {
       return 'mode_${mode!.name}';
+    }
+    if (kind == DeckKind.custom) {
+      return _customDeckId;
     }
     return 'topic_${topic?.title ?? ''}';
   }
@@ -235,6 +252,7 @@ class PracticeDeck {
 class _QuestionSnapshot {
   const _QuestionSnapshot({
     required this.number,
+    required this.deck,
     required this.mode,
     required this.verb,
     required this.answer,
@@ -243,6 +261,7 @@ class _QuestionSnapshot {
   });
 
   final int number;
+  final PracticeDeck deck;
   final TrainerMode? mode;
   final VerbEntry verb;
   final String answer;
@@ -252,6 +271,7 @@ class _QuestionSnapshot {
   _QuestionSnapshot copyWith({bool? answerVisible}) {
     return _QuestionSnapshot(
       number: number,
+      deck: deck,
       mode: mode,
       verb: verb,
       answer: answer,
@@ -544,17 +564,20 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     with SingleTickerProviderStateMixin {
   late TrainerEngine _engine;
 
-  AppTier _tier = AppTier.free;
+  AppTier _tier = forceProTier ? AppTier.pro : AppTier.free;
 
   late final AnimationController _proPulseController;
   late final Animation<double> _proPulse;
 
   late List<PracticeDeck> _decks;
   PracticeDeck? _selectedDeck;
+  PracticeDeck? _currentDeck;
   TrainerMode? _currentQuestionMode;
   VerbEntry? _currentVerb;
   String _currentAnswer = '';
   String _currentAnswerReading = '';
+  Set<String> _customDeckIds = <String>{};
+  final Random _customDeckRandom = Random();
 
   final List<_QuestionSnapshot> _questionHistory = <_QuestionSnapshot>[];
   int _historyIndex = -1;
@@ -570,6 +593,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   bool _purchasePending = false;
   String? _storeError;
   String? _pendingDeckId;
+  bool _proEntitlementCheckInProgress = false;
+  Timer? _proEntitlementCheckTimer;
 
   @override
   void initState() {
@@ -585,6 +610,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     );
     _decks = _buildDecks();
     _selectedDeck = _decks.isNotEmpty ? _decks.first : null;
+    _loadCustomDeckSelection();
     _maybeShowTutorial();
     _loadTier();
     _initInAppPurchase();
@@ -594,6 +620,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   void dispose() {
     _purchaseSubscription?.cancel();
     _proPulseController.dispose();
+    _proEntitlementCheckTimer?.cancel();
     super.dispose();
   }
 
@@ -601,7 +628,13 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     if (deck == null) {
       return false;
     }
-    return _isDeckAvailable(deck);
+    if (!_isDeckAvailable(deck)) {
+      return false;
+    }
+    if (deck.kind == DeckKind.custom) {
+      return _activeCustomDeckIds().isNotEmpty;
+    }
+    return true;
   }
 
   TrainerEngine _buildEngineForTier(AppTier tier) {
@@ -666,6 +699,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         _proProduct = response.productDetails.first;
         _storeError = null;
       });
+      await _maybeSyncProEntitlement();
     } on PlatformException catch (error) {
       if (!mounted) {
         return;
@@ -688,6 +722,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   Future<void> _listenToPurchaseUpdated(
     List<PurchaseDetails> purchaseDetailsList,
   ) async {
+    await _handleProEntitlementCheck(purchaseDetailsList);
     for (final purchaseDetails in purchaseDetailsList) {
       if (purchaseDetails.status == PurchaseStatus.pending) {
         if (mounted) {
@@ -773,7 +808,133 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     }
   }
 
+  Future<void> _loadCustomDeckSelection() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getStringList(_customDeckSelectionKey) ?? <String>[];
+    if (!mounted) {
+      return;
+    }
+    if (stored.isEmpty) {
+      final defaults = _availableCustomDeckIds();
+      setState(() {
+        _customDeckIds = defaults;
+      });
+      if (defaults.isNotEmpty) {
+        await prefs.setStringList(
+          _customDeckSelectionKey,
+          defaults.toList(),
+        );
+      }
+      return;
+    }
+    setState(() {
+      _customDeckIds = stored.toSet();
+    });
+  }
+
+  Future<void> _saveCustomDeckSelection(Set<String> ids) async {
+    setState(() {
+      _customDeckIds = ids;
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_customDeckSelectionKey, ids.toList());
+  }
+
+  Set<String> _availableCustomDeckIds() {
+    return _decks
+        .where((deck) => deck.kind != DeckKind.custom)
+        .map((deck) => deck.id)
+        .toSet();
+  }
+
+  Set<String> _activeCustomDeckIds() {
+    final available = _availableCustomDeckIds();
+    return _customDeckIds.where(available.contains).toSet();
+  }
+
+  PracticeDeck? _pickCustomDeck() {
+    final activeIds = _activeCustomDeckIds();
+    final candidates = _decks
+        .where(
+          (deck) => deck.kind != DeckKind.custom && activeIds.contains(deck.id),
+        )
+        .toList();
+    if (candidates.isEmpty) {
+      return null;
+    }
+    return candidates[_customDeckRandom.nextInt(candidates.length)];
+  }
+
+  Future<void> _maybeSyncProEntitlement() async {
+    if (forceProTier) {
+      return;
+    }
+    if (!_isProUser || !_storeAvailable) {
+      return;
+    }
+    if (_proEntitlementCheckInProgress) {
+      return;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final int lastCheck = prefs.getInt(_proEntitlementCheckKey) ?? 0;
+    final int now = DateTime.now().millisecondsSinceEpoch;
+    if (now - lastCheck < _proEntitlementCheckCooldown.inMilliseconds) {
+      return;
+    }
+    await prefs.setInt(_proEntitlementCheckKey, now);
+    _proEntitlementCheckInProgress = true;
+    _proEntitlementCheckTimer?.cancel();
+    _proEntitlementCheckTimer = Timer(_proEntitlementCheckTimeout, () {
+      if (!mounted) {
+        return;
+      }
+      _cancelProEntitlementCheck();
+    });
+    try {
+      await _iap.restorePurchases();
+    } on PlatformException {
+      if (!mounted) {
+        return;
+      }
+      _cancelProEntitlementCheck();
+    }
+  }
+
+  Future<void> _handleProEntitlementCheck(
+    List<PurchaseDetails> purchaseDetailsList,
+  ) async {
+    if (!_proEntitlementCheckInProgress) {
+      return;
+    }
+    final bool hasError = purchaseDetailsList.any(
+      (purchase) => purchase.status == PurchaseStatus.error,
+    );
+    final bool hasPro = purchaseDetailsList.any(
+      (purchase) =>
+          purchase.productID == _proProductId &&
+          (purchase.status == PurchaseStatus.purchased ||
+              purchase.status == PurchaseStatus.restored ||
+              purchase.status == PurchaseStatus.pending),
+    );
+    _cancelProEntitlementCheck();
+    if (!hasError && !hasPro && _isProUser) {
+      await _setTier(AppTier.free);
+    }
+  }
+
+  void _cancelProEntitlementCheck() {
+    _proEntitlementCheckInProgress = false;
+    _proEntitlementCheckTimer?.cancel();
+    _proEntitlementCheckTimer = null;
+  }
+
   Future<void> _loadTier() async {
+    if (forceProTier) {
+      if (_tier != AppTier.pro) {
+        _applyTier(AppTier.pro);
+      }
+      return;
+    }
     final prefs = await SharedPreferences.getInstance();
     final bool isPro = prefs.getBool(_proTierKey) ?? false;
     if (!mounted) {
@@ -781,6 +942,9 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     }
     if (isPro && _tier != AppTier.pro) {
       _applyTier(AppTier.pro);
+    }
+    if (isPro) {
+      await _maybeSyncProEntitlement();
     }
   }
 
@@ -840,10 +1004,20 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       }
     }
 
+    final customDeck = const PracticeDeck.custom();
+    if (showLockedDecks || _isDeckAvailable(customDeck)) {
+      if (labels.add(customDeck.id)) {
+        decks.add(customDeck);
+      }
+    }
+
     return decks;
   }
 
   String _deckLabel(PracticeDeck deck, AppLocalizations l10n) {
+    if (deck.kind == DeckKind.custom) {
+      return l10n.customDeckTitle;
+    }
     if (deck.kind == DeckKind.verbs && deck.mode != null) {
       return _modeLabel(deck.mode!, l10n);
     }
@@ -852,6 +1026,17 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       return '';
     }
     return _ruleLabel(topic.title, l10n);
+  }
+
+  Color _deckAccentColor(PracticeDeck deck) {
+    switch (deck.kind) {
+      case DeckKind.verbs:
+        return _accentWarm;
+      case DeckKind.topic:
+        return _accentCool;
+      case DeckKind.custom:
+        return _proGold;
+    }
   }
 
   String _modeLabel(TrainerMode mode, AppLocalizations l10n) {
@@ -921,6 +1106,28 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         .toList();
   }
 
+  List<_CustomDeckOption> _customModeOptions(AppLocalizations l10n) {
+    return _decks
+        .where((deck) => deck.kind == DeckKind.verbs)
+        .map((deck) => _CustomDeckOption(
+              deck.id,
+              _deckLabel(deck, l10n),
+              _CustomOptionKind.mode,
+            ))
+        .toList();
+  }
+
+  List<_CustomDeckOption> _customRuleOptions(AppLocalizations l10n) {
+    return _decks
+        .where((deck) => deck.kind == DeckKind.topic)
+        .map((deck) => _CustomDeckOption(
+              deck.id,
+              _deckLabel(deck, l10n),
+              _CustomOptionKind.rule,
+            ))
+        .toList();
+  }
+
   bool get _isProUser => _tier == AppTier.pro;
   bool get _hasQuestion => _currentVerb != null && _currentAnswer.isNotEmpty;
 
@@ -932,14 +1139,14 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   }
 
   bool _isDeckAvailable(PracticeDeck deck) {
+    if (deck.kind == DeckKind.custom) {
+      return _isProUser;
+    }
     final resolvedRule = _resolveRule(deck);
     if (resolvedRule == null) {
       return false;
     }
     final bool isFree = _isFreeRule(resolvedRule);
-    if (!premiumEnabled) {
-      return isFree;
-    }
     if (_isProUser) {
       return true;
     }
@@ -954,6 +1161,9 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   }
 
   _ResolvedRule? _resolveRule(PracticeDeck deck) {
+    if (deck.kind == DeckKind.custom) {
+      return null;
+    }
     if (deck.kind == DeckKind.verbs && deck.mode != null) {
       return _ResolvedRule.mode(deck.mode!);
     }
@@ -998,7 +1208,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(l10n.appTitle, style: titleStyle),
+          title: _buildAppTitle(l10n, titleStyle),
           leadingWidth:
               (!_sessionActive && showProBanners && !_isProUser) ? 156 : null,
           leading: (!_sessionActive && showProBanners && !_isProUser)
@@ -1019,6 +1229,21 @@ class _TrainerHomePageState extends State<TrainerHomePage>
               ),
             ),
           ),
+          bottom: _isProUser
+              ? PreferredSize(
+                  preferredSize: const Size.fromHeight(4),
+                  child: Container(
+                    height: 4,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [_proGold, _accentCool],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                    ),
+                  ),
+                )
+              : null,
           actions: [
             IconButton(
               onPressed: _openSettings,
@@ -1130,6 +1355,22 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     );
   }
 
+  Widget _buildAppTitle(AppLocalizations l10n, TextStyle titleStyle) {
+    final title = Text(l10n.appTitle, style: titleStyle);
+    if (!_isProUser) {
+      return title;
+    }
+    return ShaderMask(
+      shaderCallback: (bounds) => const LinearGradient(
+        colors: [_proGold, _accentCool],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ).createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
+      blendMode: BlendMode.srcIn,
+      child: title,
+    );
+  }
+
   void _openSettings() {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -1141,11 +1382,52 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     );
   }
 
+  Future<void> _openCustomDeckConfig() async {
+    final deck = _selectedDeck;
+    if (deck == null || deck.kind != DeckKind.custom) {
+      return;
+    }
+    if (!_isDeckAvailable(deck)) {
+      _showProUpsell(pendingDeck: deck);
+      return;
+    }
+    final l10n = AppLocalizations.of(context)!;
+    final result = await Navigator.of(context).push<_CustomDeckResult>(
+      MaterialPageRoute(
+        builder: (context) => _CustomDeckPage(
+          key: const ValueKey('customDeckConfig'),
+          title: l10n.customDeckTitle,
+          subtitle: l10n.customDeckSubtitle,
+          saveLabel: l10n.customDeckSave,
+          emptyHint: l10n.customDeckEmptyHint,
+          selectedCountBuilder: l10n.customDeckSelectedCount,
+          options: [
+            ..._customModeOptions(l10n),
+            ..._customRuleOptions(l10n),
+          ],
+          initialSelection: _activeCustomDeckIds(),
+        ),
+      ),
+    );
+    if (result != null) {
+      await _saveCustomDeckSelection(result.ids);
+      if (result.startNow && result.ids.isNotEmpty) {
+        _startSession();
+      }
+    }
+  }
+
   Widget _buildControls() {
     final deck = _selectedDeck;
     final canStartSession = _canPracticeDeck(deck);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final bool deckAvailable = deck != null && _isDeckAvailable(deck);
+    final bool customSelectionEmpty =
+        deck?.kind == DeckKind.custom &&
+        deckAvailable &&
+        _activeCustomDeckIds().isEmpty;
+    final bool showUnavailableHint = deck != null && !deckAvailable;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -1190,13 +1472,23 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                   hint: Text(l10n.chooseRuleHint),
                   dropdownColor: _bgCard,
                   icon: const Icon(Icons.expand_more),
+                  selectedItemBuilder: (context) {
+                    return _decks
+                        .map(
+                          (deck) => Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(_deckLabel(deck, l10n)),
+                          ),
+                        )
+                        .toList();
+                  },
                   onChanged: (value) {
                     if (value == null) return;
                     _handleDeckSelection(value);
                   },
                   items: _deckDropdownItems(context),
                 ),
-                if (!canStartSession) ...[
+                if (showUnavailableHint) ...[
                   const SizedBox(height: 10),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1210,6 +1502,28 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                       Expanded(
                         child: Text(
                           l10n.chooseRuleUnavailableHint,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.hintColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                if (customSelectionEmpty) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: theme.colorScheme.secondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          l10n.customDeckEmptyHint,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.hintColor,
                           ),
@@ -1245,7 +1559,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   List<DropdownMenuItem<PracticeDeck>> _deckDropdownItems(
     BuildContext context,
   ) {
-    final disabledColor = Theme.of(context).disabledColor;
+    final theme = Theme.of(context);
+    final disabledColor = theme.disabledColor;
     final l10n = AppLocalizations.of(context)!;
     return _decks
         .map(
@@ -1257,58 +1572,103 @@ class _TrainerHomePageState extends State<TrainerHomePage>
             final deckLabel = _deckLabel(deck, l10n);
             final Color proBadgeColor =
                 isAvailable ? _proGold : disabledColor;
+            final Color accentBase = _deckAccentColor(deck);
+            final bool isDimmed = !isAvailable;
+            final Color accent = isDimmed
+                ? theme.hintColor.withOpacity(0.4)
+                : accentBase;
+            final Color labelColor =
+                isAvailable ? Colors.white : disabledColor;
+            final Color tileColor = isDimmed
+                ? _bgCardAlt.withOpacity(0.55)
+                : _bgCardAlt;
+            final Color borderColor = isDimmed
+                ? Colors.white.withOpacity(0.08)
+                : accentBase.withOpacity(0.22);
             return DropdownMenuItem<PracticeDeck>(
               value: deck,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      deckLabel,
-                      style:
-                          isAvailable ? null : TextStyle(color: disabledColor),
-                    ),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                decoration: BoxDecoration(
+                  color: tileColor,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: borderColor,
                   ),
-                  if (showFree)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.check_circle,
-                          color: _accentCool,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          l10n.badgeFree,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: _accentCool,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                              ),
-                        ),
-                      ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.circular(999),
+                        boxShadow: isDimmed
+                            ? null
+                            : [
+                                BoxShadow(
+                                  color: accent.withOpacity(0.35),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                      ),
                     ),
-                  if (showPro)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.star,
-                          color: proBadgeColor,
-                          size: 16,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        deckLabel,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: labelColor,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          l10n.badgePro,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: proBadgeColor,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                              ),
-                        ),
-                      ],
+                      ),
                     ),
-                ],
+                    if (showFree)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.check_circle,
+                            color: _accentCool,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            l10n.badgeFree,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                                  color: _accentCool,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                          ),
+                        ],
+                      ),
+                    if (showPro)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.star,
+                            color: proBadgeColor,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            l10n.badgePro,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                                  color: proBadgeColor,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
               ),
             );
           },
@@ -1329,6 +1689,9 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       return;
     }
     _selectDeck(deck);
+    if (deck.kind == DeckKind.custom) {
+      _openCustomDeckConfig();
+    }
   }
 
   Widget _buildQuestionCard() {
@@ -1336,8 +1699,10 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final bool hasQuestion = _hasQuestion;
     final l10n = AppLocalizations.of(context)!;
 
-    final String header =
-        deck == null ? l10n.chooseRuleTitle : _deckLabel(deck, l10n);
+    final PracticeDeck? headerDeck = _currentDeck ?? deck;
+    final String header = headerDeck == null
+        ? l10n.chooseRuleTitle
+        : _deckLabel(headerDeck, l10n);
     final String prompt = _currentVerb?.dictionary ?? '';
     final String? promptReading = _currentVerb?.reading;
     final bool showPromptReading = _shouldShowReading(prompt, promptReading);
@@ -1764,7 +2129,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   }
 
   void _showProUpsell({PracticeDeck? pendingDeck}) {
-    if (_isProUser || !premiumEnabled) {
+    if (_isProUser) {
       return;
     }
     _pendingDeckId = pendingDeck?.id;
@@ -1943,6 +2308,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       _questionCounter = 0;
       _questionHistory.clear();
       _historyIndex = -1;
+      _currentDeck = null;
       _currentVerb = null;
       _currentQuestionMode = null;
       _currentAnswer = '';
@@ -1986,7 +2352,12 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   }
 
   void _loadQuestion(PracticeDeck deck) {
-    final resolvedRule = _resolveRule(deck);
+    final PracticeDeck? effectiveDeck =
+        deck.kind == DeckKind.custom ? _pickCustomDeck() : deck;
+    if (effectiveDeck == null) {
+      return;
+    }
+    final resolvedRule = _resolveRule(effectiveDeck);
     if (resolvedRule == null) {
       return;
     }
@@ -2008,6 +2379,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     }
     final snapshot = _QuestionSnapshot(
       number: ++_questionCounter,
+      deck: effectiveDeck,
       mode: resolvedMode,
       verb: verb,
       answer: answer,
@@ -2023,6 +2395,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   }
 
   void _applySnapshot(_QuestionSnapshot snapshot) {
+    _currentDeck = snapshot.deck;
     _currentQuestionMode = snapshot.mode;
     _currentVerb = snapshot.verb;
     _currentAnswer = snapshot.answer;
@@ -2040,6 +2413,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   void _resetSessionProgress() {
     _sessionActive = false;
     _questionCounter = 0;
+    _currentDeck = null;
     _currentVerb = null;
     _currentQuestionMode = null;
     _currentAnswer = '';
@@ -2056,6 +2430,26 @@ class _LanguageOption {
   final String? code;
   final String title;
   final String? subtitle;
+}
+
+class _CustomDeckOption {
+  const _CustomDeckOption(this.id, this.label, this.kind);
+
+  final String id;
+  final String label;
+  final _CustomOptionKind kind;
+}
+
+enum _CustomOptionKind { mode, rule }
+
+class _CustomDeckResult {
+  const _CustomDeckResult({
+    required this.ids,
+    required this.startNow,
+  });
+
+  final Set<String> ids;
+  final bool startNow;
 }
 
 class SettingsPage extends StatefulWidget {
@@ -2235,6 +2629,262 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CustomDeckPage extends StatefulWidget {
+  const _CustomDeckPage({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.saveLabel,
+    required this.emptyHint,
+    required this.selectedCountBuilder,
+    required this.options,
+    required this.initialSelection,
+  });
+
+  final String title;
+  final String subtitle;
+  final String saveLabel;
+  final String emptyHint;
+  final String Function(Object) selectedCountBuilder;
+  final List<_CustomDeckOption> options;
+  final Set<String> initialSelection;
+
+  @override
+  State<_CustomDeckPage> createState() => _CustomDeckPageState();
+}
+
+class _CustomDeckPageState extends State<_CustomDeckPage> {
+  late Set<String> _selectedIds;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIds = Set<String>.of(widget.initialSelection);
+  }
+
+  bool get _hasSelection => _selectedIds.isNotEmpty;
+
+  void _toggleOption(String id, bool isSelected) {
+    setState(() {
+      if (isSelected) {
+        _selectedIds.add(id);
+      } else {
+        _selectedIds.remove(id);
+      }
+    });
+  }
+
+  void _saveSelection() {
+    Navigator.of(context).pop(
+      _CustomDeckResult(ids: _selectedIds, startNow: false),
+    );
+  }
+
+  void _startSession() {
+    Navigator.of(context).pop(
+      _CustomDeckResult(ids: _selectedIds, startNow: true),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [_bgDeep, Color(0xFF1A1C20)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [_bgDeep, Color(0xFF1B1D22)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+            ),
+            ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+              children: [
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.subtitle,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.hintColor,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          widget.selectedCountBuilder(_selectedIds.length),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (!_hasSelection) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.emptyHint,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.hintColor,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildOptions(context, widget.options),
+              ],
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: SizedBox(
+            width: double.infinity,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _hasSelection ? _startSession : null,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      AppLocalizations.of(context)!.startSession,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: _saveSelection,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(widget.saveLabel),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptions(
+    BuildContext context,
+    List<_CustomDeckOption> options,
+  ) {
+    if (options.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final theme = Theme.of(context);
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final option in options)
+              _buildOptionTile(theme, option),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptionTile(ThemeData theme, _CustomDeckOption option) {
+    final bool selected = _selectedIds.contains(option.id);
+    final Color accent = option.kind == _CustomOptionKind.mode
+        ? _accentWarm
+        : _accentCool;
+    final Color barColor =
+        selected ? accent : accent.withOpacity(0.3);
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => _toggleOption(option.id, !selected),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: _bgCardAlt,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: accent.withOpacity(selected ? 0.4 : 0.18),
+          ),
+        ),
+        child: Row(
+          children: [
+            Checkbox(
+              value: selected,
+              onChanged: (value) =>
+                  _toggleOption(option.id, value ?? false),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
+            const SizedBox(width: 6),
+            Container(
+              width: 6,
+              height: 24,
+              decoration: BoxDecoration(
+                color: barColor,
+                borderRadius: BorderRadius.circular(99),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: accent.withOpacity(0.35),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                option.label,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
             ),
           ],
         ),

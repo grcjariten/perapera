@@ -509,6 +509,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ba form'**
   String get ruleBaForm;
+
+  /// No description provided for @customDeckTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get customDeckTitle;
+
+  /// No description provided for @customDeckSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the rules you want to practice.'**
+  String get customDeckSubtitle;
+
+  /// No description provided for @customDeckConfigure.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure'**
+  String get customDeckConfigure;
+
+  /// No description provided for @customDeckSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected: {count}'**
+  String customDeckSelectedCount(Object count);
+
+  /// No description provided for @customDeckEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one rule to start.'**
+  String get customDeckEmptyHint;
+
+  /// No description provided for @customDeckModesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Base forms'**
+  String get customDeckModesTitle;
+
+  /// No description provided for @customDeckRulesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rules'**
+  String get customDeckRulesTitle;
+
+  /// No description provided for @customDeckSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get customDeckSave;
 }
 
 class _AppLocalizationsDelegate

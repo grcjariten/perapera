@@ -66,5 +66,18 @@
   "ruleTeOku": "~te oku",
   "ruleRelative": "Relative",
   "ruleNagara": "~nagara",
-  "ruleBaForm": "Forme ba"
+  "ruleBaForm": "Forme ba",
+  "customDeckTitle": "Personnalisee",
+  "customDeckSubtitle": "Choisissez les regles a pratiquer.",
+  "customDeckConfigure": "Configurer",
+  "customDeckSelectedCount": "Selectionnees: {count}",
+  "@customDeckSelectedCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "customDeckEmptyHint": "Selectionnez au moins une regle pour commencer.",
+  "customDeckModesTitle": "Formes de base",
+  "customDeckRulesTitle": "Regles",
+  "customDeckSave": "Enregistrer"
 }
