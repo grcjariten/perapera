@@ -110,7 +110,7 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: 999px;
   background: var(--bg-strong);
   border: 1px solid var(--border);
@@ -123,24 +123,6 @@ main {
   gap: 14px;
   margin: 24px 0 10px;
   flex-wrap: wrap;
-}
-
-.chips {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 16px;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: #fff;
-  color: var(--muted);
-  font-size: 0.85rem;
 }
 
 .fine-note {
@@ -182,7 +164,7 @@ main {
   padding: 16px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
-  max-width: 320px;
+  max-width: 300px;
   justify-self: center;
   width: 100%;
 }
@@ -207,7 +189,7 @@ main {
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid var(--border);
-  background: #151515;
+  background: #fff;
   aspect-ratio: 9 / 16;
 }
 
@@ -262,14 +244,9 @@ main {
   font-family: var(--font-display);
 }
 
-.showcase-head p {
-  margin: 8px 0 0;
-  color: var(--muted);
-}
-
 .shots {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
 }
 
@@ -286,13 +263,27 @@ main {
   padding: 0;
   overflow: hidden;
   aspect-ratio: 9 / 16;
+  position: relative;
 }
 
 .shot.image img {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #fff;
+}
+
+.shot.image figcaption {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
 }
 
 .cta {
