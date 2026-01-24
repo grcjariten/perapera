@@ -40,7 +40,10 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 32px 8vw 0;
+  padding: 32px 0 0;
+  width: min(1120px, 92vw);
+  margin: 0 auto;
+  gap: 16px;
 }
 
 .logo {
@@ -74,13 +77,15 @@ body {
 }
 
 main {
-  padding: 48px 8vw 80px;
+  padding: 48px 0 80px;
+  width: min(1120px, 92vw);
+  margin: 0 auto;
 }
 
 .hero {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 48px;
+  gap: 36px;
   align-items: start;
 }
 
@@ -174,11 +179,12 @@ main {
 .hero-card {
   background: var(--card);
   border-radius: 24px;
-  padding: 18px;
+  padding: 16px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
-  max-width: 420px;
+  max-width: 320px;
   justify-self: center;
+  width: 100%;
 }
 
 .card-top {
@@ -203,7 +209,6 @@ main {
   border: 1px solid var(--border);
   background: #151515;
   aspect-ratio: 9 / 16;
-  max-height: 520px;
 }
 
 .hero-shot img {
@@ -217,7 +222,7 @@ main {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 14px;
-  margin: 60px 0 70px;
+  margin: 46px 0 56px;
 }
 
 .step-pill {
@@ -248,9 +253,7 @@ main {
 
 .showcase {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 24px;
-  align-items: start;
+  gap: 18px;
   margin-bottom: 70px;
 }
 
@@ -259,9 +262,14 @@ main {
   font-family: var(--font-display);
 }
 
+.showcase-head p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
 .shots {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
 }
 
@@ -377,5 +385,16 @@ main {
 
   .cta {
     padding: 30px;
+  }
+}
+
+@media (min-width: 900px) {
+  .hero {
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: center;
+  }
+
+  .hero-card {
+    justify-self: end;
   }
 }
