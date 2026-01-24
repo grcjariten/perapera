@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   color-scheme: light;
   --bg: #f6f2eb;
   --bg-strong: #efe6da;
@@ -120,6 +120,32 @@ main {
   flex-wrap: wrap;
 }
 
+.hero-notes {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.hero-notes li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.hero-notes li::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-top: 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
 .fine-print {
   font-size: 0.9rem;
   color: var(--muted);
@@ -206,6 +232,63 @@ main {
   font-size: 0.9rem;
 }
 
+.steps {
+  margin: 70px 0 80px;
+  padding: 30px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: linear-gradient(120deg, #fff3e4 0%, #fff8ef 100%);
+  display: grid;
+  gap: 24px;
+}
+
+.steps-intro h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+}
+
+.steps-intro p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.step-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 24px rgba(34, 23, 13, 0.08);
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.step-card h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.step-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -241,6 +324,7 @@ main {
 
 .showcase {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 32px;
   align-items: center;
   margin-bottom: 80px;
@@ -264,6 +348,18 @@ main {
   padding: 40px 20px;
   text-align: center;
   color: var(--muted);
+}
+
+.shot.image {
+  padding: 0;
+  overflow: hidden;
+}
+
+.shot.image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .cta {
@@ -332,6 +428,7 @@ main {
   opacity: 0;
   transform: translateY(14px);
   transition: opacity 0.6s ease, transform 0.6s ease;
+  transition-delay: var(--reveal-delay, 0ms);
 }
 
 [data-reveal].is-visible {
@@ -353,5 +450,9 @@ main {
 
   .cta {
     padding: 30px;
+  }
+
+  .steps {
+    padding: 24px;
   }
 }
