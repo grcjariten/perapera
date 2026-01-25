@@ -24,85 +24,123 @@
         <span class="logo-mark">P</span>
         <span class="logo-text">PeraPera</span>
       </div>
-      <div class="nav-cta">
-        <a class="button" href="#download">Apri su Google Play</a>
+      <div class="nav-actions">
+        <div class="nav-cta">
+          <a class="button" href="#download" data-i18n="nav-cta">Apri su Google Play</a>
+        </div>
+        <div class="lang-switch" role="group" aria-label="Lingua" data-i18n="lang-aria" data-i18n-attr="aria-label">
+          <button class="lang-btn is-active" type="button" data-lang="it">IT</button>
+          <button class="lang-btn" type="button" data-lang="es">ES</button>
+        </div>
       </div>
     </header>
 
     <main>
       <section class="hero">
         <div class="hero-copy" data-reveal>
-          <p class="pill">Per chi ha gi&agrave; studiato: qui consolidi.</p>
-          <h1>Consolida la grammatica giapponese, <span>3 minuti alla volta</span>.</h1>
-          <p class="lead">Apri, scegli una regola, fai pratica subito.</p>
+          <p class="pill" data-i18n="hero-pill">Per chi ha gi&agrave; studiato: qui consolidi.</p>
+          <h1 data-i18n="hero-title" data-i18n-html="true">
+            Consolida la grammatica giapponese, <span>3 minuti alla volta</span>.
+          </h1>
+          <p class="lead" data-i18n="hero-lead">Apri, scegli una regola, fai pratica subito.</p>
           <div class="hero-actions">
-            <a class="button" href="https://play.google.com/store/apps/details?id=com.grcsoft.perapera">
+            <a
+              class="button"
+              href="https://play.google.com/store/apps/details?id=com.grcsoft.perapera"
+              data-i18n="hero-action-primary"
+            >
               Apri su Google Play
             </a>
-            <a class="button ghost" href="https://forms.gle/Veq3388Y6maf8dsK9">Lascia feedback</a>
+            <a class="button ghost" href="https://forms.gle/Veq3388Y6maf8dsK9" data-i18n="hero-action-secondary">
+              Lascia feedback
+            </a>
           </div>
-          <p class="fine-note">Solo Android per ora &middot; Non &egrave; un corso completo</p>
+          <p class="fine-note" data-i18n="hero-note">Solo Android per ora &middot; Non &egrave; un corso completo</p>
         </div>
         <div class="hero-card" data-reveal>
           <div class="card-top">
-            <span>Schermata reale</span>
+            <span data-i18n="hero-card-label">Schermata reale</span>
             <span class="dot"></span>
           </div>
           <div class="hero-shot">
-            <img src="assets/screen-1.png?v=3" alt="Schermata PeraPera" />
+            <img
+              src="assets/screen-1.png?v=3"
+              alt="Schermata PeraPera"
+              data-i18n="hero-shot-alt"
+              data-i18n-attr="alt"
+            />
           </div>
         </div>
       </section>
 
       <section class="steps-strip" id="what" data-reveal>
-        <div class="step-pill"><span>1</span> Scegli la regola</div>
-        <div class="step-pill"><span>2</span> Fai pratica</div>
-        <div class="step-pill"><span>3</span> Ripassa con flashcard</div>
+        <div class="step-pill" data-i18n="step-1" data-i18n-html="true"><span>1</span> Scegli la regola</div>
+        <div class="step-pill" data-i18n="step-2" data-i18n-html="true"><span>2</span> Fai pratica</div>
+        <div class="step-pill" data-i18n="step-3" data-i18n-html="true"><span>3</span> Ripassa con flashcard</div>
       </section>
 
       <section class="showcase">
         <div class="showcase-head" data-reveal>
-          <h2>Dentro l&#39;app</h2>
+          <h2 data-i18n="showcase-title">Dentro l&#39;app</h2>
+          <p class="muted-note" data-i18n="showcase-note">Schermate in inglese per ora.</p>
         </div>
         <div class="shots" data-reveal>
           <figure class="shot image">
-            <img src="assets/screen-1.png?v=3" alt="Schermata: pratica rapida" />
-            <figcaption>Pratica rapida</figcaption>
+            <img
+              src="assets/screen-1.png?v=3"
+              alt="Schermata: pratica rapida"
+              data-i18n="shot-1-alt"
+              data-i18n-attr="alt"
+            />
+            <figcaption data-i18n="shot-1-caption">Pratica rapida</figcaption>
           </figure>
           <figure class="shot image">
-            <img src="assets/screen-2.png?v=3" alt="Schermata: ripasso finale" />
-            <figcaption>Ripasso finale</figcaption>
+            <img
+              src="assets/screen-2.png?v=3"
+              alt="Schermata: ripasso finale"
+              data-i18n="shot-2-alt"
+              data-i18n-attr="alt"
+            />
+            <figcaption data-i18n="shot-2-caption">Ripasso finale</figcaption>
           </figure>
         </div>
       </section>
 
       <section class="cta" id="download" data-reveal>
         <div>
-          <h2>Apri e fai una sessione</h2>
-          <p>Tre minuti per capire se ti &egrave; utile.</p>
+          <h2 data-i18n="cta-title">Apri e fai una sessione</h2>
+          <p data-i18n="cta-text">Tre minuti per capire se ti &egrave; utile.</p>
         </div>
         <div class="cta-actions">
-          <a class="button" href="https://play.google.com/store/apps/details?id=com.grcsoft.perapera">
+          <a
+            class="button"
+            href="https://play.google.com/store/apps/details?id=com.grcsoft.perapera"
+            data-i18n="cta-primary"
+          >
             Apri su Google Play
           </a>
-          <a class="button ghost" href="#feedback">Lascia feedback</a>
+          <a class="button ghost" href="#feedback" data-i18n="cta-secondary">Lascia feedback</a>
         </div>
       </section>
 
       <section class="feedback" id="feedback" data-reveal>
         <div class="feedback-card">
-          <h2>Feedback diretto</h2>
-          <p>Due righe bastano.</p>
+          <h2 data-i18n="feedback-title">Feedback diretto</h2>
+          <p data-i18n="feedback-text">Due righe bastano.</p>
           <div class="feedback-links">
-            <a class="button" href="https://forms.gle/Veq3388Y6maf8dsK9">Apri il form</a>
-            <a class="button ghost" href="mailto:grcjariten@gmail.com">Scrivi una mail</a>
+            <a class="button" href="https://forms.gle/Veq3388Y6maf8dsK9" data-i18n="feedback-primary">
+              Apri il form
+            </a>
+            <a class="button ghost" href="mailto:grcjariten@gmail.com" data-i18n="feedback-secondary">
+              Scrivi una mail
+            </a>
           </div>
         </div>
       </section>
     </main>
 
     <footer class="footer">
-      <p>&copy; 2026 PeraPera - Una piccola app, migliorata ogni settimana.</p>
+      <p data-i18n="footer">&copy; 2026 PeraPera - Una piccola app, migliorata ogni settimana.</p>
     </footer>
 
     <script src="script.js?v=2"></script>

@@ -76,6 +76,41 @@ body {
   gap: 12px;
 }
 
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.lang-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.lang-btn.is-active {
+  background: var(--accent);
+  color: #fff;
+}
+
 main {
   padding: 48px 0 80px;
   width: min(1120px, 92vw);
@@ -164,7 +199,7 @@ main {
   padding: 0;
   border: none;
   box-shadow: none;
-  max-width: 300px;
+  max-width: 240px;
   justify-self: center;
   width: 100%;
 }
@@ -244,10 +279,22 @@ main {
   font-family: var(--font-display);
 }
 
+.showcase-head {
+  display: grid;
+  gap: 6px;
+}
+
+.muted-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
 .shots {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 220px));
+  gap: 18px;
+  justify-content: center;
 }
 
 .shot {
@@ -264,6 +311,7 @@ main {
   overflow: hidden;
   aspect-ratio: 9 / 16;
   position: relative;
+  width: 100%;
 }
 
 .shot.image img {
@@ -375,6 +423,11 @@ main {
     flex-wrap: wrap;
   }
 
+  .nav-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
   .cta {
     padding: 30px;
   }
@@ -388,5 +441,6 @@ main {
 
   .hero-card {
     justify-self: end;
+    max-width: 260px;
   }
 }
