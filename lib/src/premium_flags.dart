@@ -1,6 +1,6 @@
 // Premium feature switches.
 // Set forceProTier to true to preview Pro content without purchases.
-const bool forceProTier = false;
+const bool forceProTier = true;
 
 const bool showProBanners = true;
 const bool showProBadges = true;
