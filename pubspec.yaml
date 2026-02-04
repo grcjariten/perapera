@@ -2,7 +2,7 @@ name: perapera_trainer
 description: >
   Allenamento verbi giapponesi in Flutter, con modalità CLI opzionale.
 publish_to: 'none'
-version: 1.0.0+7
+version: 1.0.0+8
 
 environment:
   sdk: ">=2.18.0 <4.0.0"
@@ -10,7 +10,7 @@ environment:
 
 dependencies:
   flutter:
-    sdk: flutterg
+    sdk: flutter
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2
@@ -34,6 +34,13 @@ flutter_launcher_icons:
 flutter:
   generate: true
   uses-material-design: true
+  assets:
+    - assets/mascotte.png
+    - assets/tierS.png
+    - assets/tierA.png
+    - assets/tierB.png
+    - assets/tierC.png
+    - assets/tierD.png
   fonts:
     - family: NotoSansJP
       fonts:

@@ -49,6 +49,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get reportProblemError => 'Impossible d\'ouvrir le lien.';
 
   @override
+  String get resetStatsTitle => 'Réinitialiser les statistiques';
+
+  @override
+  String get resetStatsSubtitle =>
+      'Supprimer toutes les données de précision enregistrées.';
+
+  @override
+  String get resetStatsConfirmTitle => 'Réinitialiser les statistiques ?';
+
+  @override
+  String get resetStatsConfirmBody =>
+      'Cette action supprimera définitivement vos progrès pour toutes les règles.';
+
+  @override
+  String get resetStatsConfirmButton => 'Réinitialiser';
+
+  @override
+  String get resetStatsCancelButton => 'Annuler';
+
+  @override
+  String get resetStatsDone => 'Statistiques réinitialisées.';
+
+  @override
   String get chooseRuleTitle => 'Choisir une règle';
 
   @override
@@ -79,13 +102,78 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get answerHint =>
-      'Touchez \"Afficher la solution\" puis \"Suivant\" pour continuer.';
+      'Touchez \"Afficher la solution\" puis choisissez \"Correct\" ou \"Faux\".';
 
   @override
   String get preparingFirstQuestion => 'Préparation de la première question.';
 
   @override
   String get selectRuleToBegin => 'Sélectionnez une règle pour commencer.';
+
+  @override
+  String get statsButton => 'Statistiques';
+
+  @override
+  String get statsTitle => 'Progression';
+
+  @override
+  String get statsRangeWeek => 'Semaine';
+
+  @override
+  String get statsRangeMonth => 'Mois';
+
+  @override
+  String get statsThisWeek => 'Cette semaine';
+
+  @override
+  String get statsLastWeek => 'La semaine dernière';
+
+  @override
+  String get statsThisMonth => 'Ce mois';
+
+  @override
+  String get statsLastMonth => 'Le mois dernier';
+
+  @override
+  String get statsAccuracyLabel => 'Précision';
+
+  @override
+  String get statsLast30Days => '30 derniers jours';
+
+  @override
+  String statsCorrectOfTotal(Object correct, Object total) {
+    return 'Correctes : $correct/$total';
+  }
+
+  @override
+  String get statsNoData => 'Pas encore de données';
+
+  @override
+  String get statsTrendTitle => 'Tendance';
+
+  @override
+  String get statsTierS => 'TIER S';
+
+  @override
+  String get statsTierA => 'TIER A';
+
+  @override
+  String get statsTierB => 'TIER B';
+
+  @override
+  String get statsTierC => 'TIER C';
+
+  @override
+  String get statsTierD => 'TIER D';
+
+  @override
+  String get statsTierFail => 'FAIL';
+
+  @override
+  String get answerCorrectButton => 'Correct';
+
+  @override
+  String get answerWrongButton => 'Faux';
 
   @override
   String get proPill => 'Passer en Pro';
@@ -147,7 +235,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tutorialLine2 =>
-      'Pensez à la réponse puis touchez \"Afficher la solution\".';
+      'Pensez à la réponse puis touchez \"Afficher la solution\" et évaluez-vous.';
 
   @override
   String get tutorialButton => 'OK, c\'est parti';

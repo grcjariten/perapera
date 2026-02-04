@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:intl/intl.dart';
 import 'package:perapera_trainer/l10n/app_localizations.dart';
 import 'package:perapera_trainer/trainer_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -187,6 +190,8 @@ enum DeckKind { verbs, topic, custom }
 
 enum AppTier { free, pro }
 
+enum _AppMenuAction { settings, stats }
+
 const Color _bgDeep = Color(0xFF141517);
 const Color _bgCard = Color(0xFF1F2227);
 const Color _bgCardAlt = Color(0xFF232831);
@@ -202,9 +207,23 @@ const String _proProductId = 'perapera_pro';
 const String _proFallbackPrice = r'$4.78';
 const String _customDeckId = 'custom_deck';
 const String _customDeckSelectionKey = 'perapera_custom_deck_selection';
+const String _ruleProgressKey = 'perapera_rule_progress';
 const String _proEntitlementCheckKey = 'perapera_pro_entitlement_check';
 const Duration _proEntitlementCheckCooldown = Duration(days: 7);
 const Duration _proEntitlementCheckTimeout = Duration(seconds: 8);
+
+const String _assetMascotte = 'assets/mascotte.png';
+const String _assetTierS = 'assets/tierS.png';
+const String _assetTierA = 'assets/tierA.png';
+const String _assetTierB = 'assets/tierB.png';
+const String _assetTierC = 'assets/tierC.png';
+const String _assetTierD = 'assets/tierD.png';
+
+const double _tierThresholdS = 0.95;
+const double _tierThresholdA = 0.9;
+const double _tierThresholdB = 0.8;
+const double _tierThresholdC = 0.7;
+const double _tierThresholdD = 0.6;
 
 class PracticeDeck {
   const PracticeDeck.verbs(this.mode)
@@ -249,6 +268,8 @@ class PracticeDeck {
 
 }
 
+enum _AnswerResult { ungraded, correct, wrong }
+
 class _QuestionSnapshot {
   const _QuestionSnapshot({
     required this.number,
@@ -258,6 +279,7 @@ class _QuestionSnapshot {
     required this.answer,
     required this.answerReading,
     required this.answerVisible,
+    required this.result,
   });
 
   final int number;
@@ -267,8 +289,9 @@ class _QuestionSnapshot {
   final String answer;
   final String answerReading;
   final bool answerVisible;
+  final _AnswerResult result;
 
-  _QuestionSnapshot copyWith({bool? answerVisible}) {
+  _QuestionSnapshot copyWith({bool? answerVisible, _AnswerResult? result}) {
     return _QuestionSnapshot(
       number: number,
       deck: deck,
@@ -277,6 +300,296 @@ class _QuestionSnapshot {
       answer: answer,
       answerReading: answerReading,
       answerVisible: answerVisible ?? this.answerVisible,
+      result: result ?? this.result,
+    );
+  }
+}
+
+class _ProgressEntry {
+  const _ProgressEntry({
+    required this.correct,
+    required this.total,
+  });
+
+  final int correct;
+  final int total;
+
+  _ProgressEntry copyWith({int? correct, int? total}) {
+    return _ProgressEntry(
+      correct: correct ?? this.correct,
+      total: total ?? this.total,
+    );
+  }
+}
+
+class _ProgressSummary {
+  const _ProgressSummary({
+    required this.correct,
+    required this.total,
+  });
+
+  final int correct;
+  final int total;
+
+  double get percent => total == 0 ? 0 : correct / total;
+}
+
+class _ProgressPoint {
+  const _ProgressPoint({
+    required this.date,
+    required this.percent,
+  });
+
+  final DateTime date;
+  final double? percent;
+}
+
+class _TierInfo {
+  const _TierInfo({
+    required this.label,
+    required this.accent,
+    required this.textColor,
+    required this.icon,
+    required this.assetPath,
+  });
+
+  final String label;
+  final Color accent;
+  final Color textColor;
+  final IconData icon;
+  final String assetPath;
+}
+
+class _TierPreview {
+  const _TierPreview({
+    required this.tier,
+    required this.percent,
+  });
+
+  final _TierInfo tier;
+  final double percent;
+
+  int get total => 100;
+  int get correct => (percent * total).round();
+}
+
+class _PatternStyle {
+  const _PatternStyle({
+    required this.color,
+    this.gradientColors,
+  });
+
+  final Color color;
+  final List<Color>? gradientColors;
+}
+
+bool _isTierPreviewEnabled() {
+  final String key = tierPreviewOverride.trim().toUpperCase();
+  return key.isNotEmpty && key != 'X';
+}
+
+_TierPreview? _tierPreviewOverrideInfo(AppLocalizations l10n) {
+  final String key = tierPreviewOverride.trim().toUpperCase();
+  if (key.isEmpty || key == 'X') {
+    return null;
+  }
+  switch (key) {
+    case 'S':
+      return _TierPreview(
+        tier: _tierInfoForPercent(0.97, l10n),
+        percent: 0.97,
+      );
+    case 'A':
+      return _TierPreview(
+        tier: _tierInfoForPercent(0.92, l10n),
+        percent: 0.92,
+      );
+    case 'B':
+      return _TierPreview(
+        tier: _tierInfoForPercent(0.85, l10n),
+        percent: 0.85,
+      );
+    case 'C':
+      return _TierPreview(
+        tier: _tierInfoForPercent(0.74, l10n),
+        percent: 0.74,
+      );
+    case 'D':
+    case 'E':
+      return _TierPreview(
+        tier: _tierInfoForPercent(0.62, l10n),
+        percent: 0.62,
+      );
+    case 'F':
+    case 'FAIL':
+      return _TierPreview(
+        tier: _tierInfoForPercent(0.45, l10n),
+        percent: 0.45,
+      );
+    default:
+      return null;
+  }
+}
+
+_PatternStyle _patternStyleForTier(_TierInfo? tier) {
+  if (tier == null) {
+    return _PatternStyle(
+      color: Color.lerp(_bgCardAlt, Colors.black, 0.35) ?? _bgCardAlt,
+    );
+  }
+  switch (tier.assetPath) {
+    case _assetTierS:
+      return const _PatternStyle(
+        color: Color(0xFFFF4DA6),
+        gradientColors: [
+          Color(0xFFFF6FB1),
+          Color(0xFFFF2E8B),
+          Color(0xFF8A4CFF),
+        ],
+      );
+    case _assetTierA:
+      return const _PatternStyle(
+        color: Color(0xFF3FE6FF),
+      );
+    case _assetTierB:
+      return const _PatternStyle(
+        color: Color(0xFFFFB04A),
+      );
+    default:
+      return _PatternStyle(
+        color: Color.lerp(_bgCardAlt, Colors.black, 0.3) ?? _bgCardAlt,
+      );
+  }
+}
+
+class _TierBadge extends StatelessWidget {
+  const _TierBadge({
+    required this.tier,
+    this.compact = false,
+  });
+
+  final _TierInfo tier;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final double iconSize = compact ? 14 : 18;
+    final double fontSize = compact ? 12 : 16;
+    final EdgeInsets padding = compact
+        ? const EdgeInsets.symmetric(horizontal: 10, vertical: 6)
+        : const EdgeInsets.symmetric(horizontal: 14, vertical: 10);
+    final bool isTierS = tier.assetPath == _assetTierS;
+    final List<Color> gradientColors = isTierS
+        ? const [
+            Color(0xFFFFB1E3),
+            Color(0xFFFF4DA6),
+            Color(0xFF8A4CFF),
+          ]
+        : [
+            Color.lerp(tier.accent, Colors.white, 0.24) ?? tier.accent,
+            tier.accent,
+          ];
+    final Color glowColor =
+        isTierS ? const Color(0xFFFF4DA6) : tier.accent;
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: [
+          if (isTierS)
+            BoxShadow(
+              color: const Color(0xFFFF5CD6).withOpacity(0.9),
+              blurRadius: 30,
+              offset: const Offset(0, 8),
+            ),
+          if (isTierS)
+            BoxShadow(
+              color: const Color(0xFF8A4CFF).withOpacity(0.65),
+              blurRadius: 34,
+              offset: const Offset(0, 10),
+            ),
+          BoxShadow(
+            color: glowColor.withOpacity(0.6),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: glowColor.withOpacity(0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            tier.icon,
+            size: iconSize,
+            color: isTierS ? Colors.white : tier.textColor,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            tier.label,
+            style: TextStyle(
+              color: isTierS ? Colors.white : tier.textColor,
+              fontFamily: 'PlayfairDisplay',
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.1,
+              fontSize: fontSize,
+              shadows: isTierS
+                  ? const [
+                      Shadow(
+                        color: Color(0xFFFF5CD6),
+                        blurRadius: 12,
+                      ),
+                      Shadow(
+                        color: Color(0xFF8A4CFF),
+                        blurRadius: 16,
+                      ),
+                    ]
+                  : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OutlinedText extends StatelessWidget {
+  const _OutlinedText({
+    required this.text,
+    required this.style,
+    this.strokeWidth = 2,
+    this.strokeColor = Colors.black,
+  });
+
+  final String text;
+  final TextStyle style;
+  final double strokeWidth;
+  final Color strokeColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Text(
+          text,
+          style: style.copyWith(
+            foreground: Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = strokeWidth
+              ..color = strokeColor,
+          ),
+        ),
+        Text(text, style: style),
+      ],
     );
   }
 }
@@ -299,6 +612,117 @@ class _VerbRule {
   final String title;
   final String Function(VerbEntry verb) buildAnswer;
   final String Function(VerbEntry verb) buildReading;
+}
+
+DateTime _stripTime(DateTime date) {
+  return DateTime(date.year, date.month, date.day);
+}
+
+String _dateKey(DateTime date) {
+  final String month = date.month.toString().padLeft(2, '0');
+  final String day = date.day.toString().padLeft(2, '0');
+  return '${date.year}-$month-$day';
+}
+
+DateTime? _dateFromKey(String key) {
+  try {
+    final parsed = DateTime.parse(key);
+    return DateTime(parsed.year, parsed.month, parsed.day);
+  } catch (_) {
+    return null;
+  }
+}
+
+_ProgressSummary _summarizeRange(
+  Map<String, _ProgressEntry> entries,
+  DateTime start,
+  DateTime end,
+) {
+  int correct = 0;
+  int total = 0;
+  entries.forEach((dateKey, entry) {
+    final date = _dateFromKey(dateKey);
+    if (date == null) {
+      return;
+    }
+    if (date.isBefore(start) || date.isAfter(end)) {
+      return;
+    }
+    correct += entry.correct;
+    total += entry.total;
+  });
+  return _ProgressSummary(correct: correct, total: total);
+}
+
+List<_ProgressPoint> _buildSeries(
+  Map<String, _ProgressEntry> entries,
+  DateTime start,
+  int days,
+) {
+  final points = <_ProgressPoint>[];
+  for (int i = 0; i < days; i++) {
+    final date = start.add(Duration(days: i));
+    final entry = entries[_dateKey(date)];
+    final double? percent =
+        entry == null || entry.total == 0 ? null : entry.correct / entry.total;
+    points.add(_ProgressPoint(date: date, percent: percent));
+  }
+  return points;
+}
+
+_TierInfo _tierInfoForPercent(double percent, AppLocalizations l10n) {
+  if (percent >= _tierThresholdS) {
+    return _TierInfo(
+      label: l10n.statsTierS,
+      accent: _proGold,
+      textColor: Colors.black,
+      icon: Icons.star,
+      assetPath: _assetTierS,
+    );
+  }
+  if (percent >= _tierThresholdA) {
+    return _TierInfo(
+      label: l10n.statsTierA,
+      accent: _accentCool,
+      textColor: Colors.black,
+      icon: Icons.grade,
+      assetPath: _assetTierA,
+    );
+  }
+  if (percent >= _tierThresholdB) {
+    return _TierInfo(
+      label: l10n.statsTierB,
+      accent: _accentWarm,
+      textColor: Colors.black,
+      icon: Icons.flash_on,
+      assetPath: _assetTierB,
+    );
+  }
+  if (percent >= _tierThresholdC) {
+    return _TierInfo(
+      label: l10n.statsTierC,
+      accent: _accentCoral,
+      textColor: Colors.black,
+      icon: Icons.whatshot,
+      assetPath: _assetTierC,
+    );
+  }
+  if (percent >= _tierThresholdD) {
+    return _TierInfo(
+      label: l10n.statsTierD,
+      accent: Colors.white70,
+      textColor: Colors.black,
+      icon: Icons.check,
+      assetPath: _assetTierD,
+    );
+  }
+  return _TierInfo(
+    label: l10n.statsTierFail,
+    accent: Colors.redAccent,
+    textColor: Colors.white,
+    icon: Icons.close,
+    assetPath: _assetMascotte,
+  );
 }
 
 const Map<String, String> _godanIMap = <String, String>{
@@ -578,6 +1002,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   String _currentAnswerReading = '';
   Set<String> _customDeckIds = <String>{};
   final Random _customDeckRandom = Random();
+  Map<String, Map<String, _ProgressEntry>> _progressByDeck =
+      <String, Map<String, _ProgressEntry>>{};
 
   final List<_QuestionSnapshot> _questionHistory = <_QuestionSnapshot>[];
   int _historyIndex = -1;
@@ -611,6 +1037,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     _decks = _buildDecks();
     _selectedDeck = _decks.isNotEmpty ? _decks.first : null;
     _loadCustomDeckSelection();
+    _loadProgress();
     _maybeShowTutorial();
     _loadTier();
     _initInAppPurchase();
@@ -838,6 +1265,118 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     });
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_customDeckSelectionKey, ids.toList());
+  }
+
+  Future<void> _loadProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_ruleProgressKey);
+    if (raw == null || raw.isEmpty) {
+      return;
+    }
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) {
+        return;
+      }
+      final parsed = <String, Map<String, _ProgressEntry>>{};
+      decoded.forEach((deckId, value) {
+        if (value is! Map) {
+          return;
+        }
+        final entries = <String, _ProgressEntry>{};
+        value.forEach((dateKey, entry) {
+          if (entry is! Map) {
+            return;
+          }
+          final dynamic correctRaw = entry['c'] ?? entry['correct'];
+          final dynamic totalRaw = entry['t'] ?? entry['total'];
+          if (correctRaw is! num || totalRaw is! num) {
+            return;
+          }
+          entries[dateKey.toString()] = _ProgressEntry(
+            correct: correctRaw.toInt(),
+            total: totalRaw.toInt(),
+          );
+        });
+        if (entries.isNotEmpty) {
+          parsed[deckId.toString()] = entries;
+        }
+      });
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _progressByDeck = parsed;
+      });
+    } catch (_) {
+      return;
+    }
+  }
+
+  Future<void> _saveProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final Map<String, dynamic> payload = <String, dynamic>{};
+    _progressByDeck.forEach((deckId, entries) {
+      payload[deckId] = entries.map(
+        (dateKey, entry) => MapEntry(
+          dateKey,
+          <String, int>{
+            'c': entry.correct,
+            't': entry.total,
+          },
+        ),
+      );
+    });
+    await prefs.setString(_ruleProgressKey, jsonEncode(payload));
+  }
+
+  Map<String, _ProgressEntry> _progressForDeck(String deckId) {
+    return _progressByDeck[deckId] ?? <String, _ProgressEntry>{};
+  }
+
+  bool _hasProgressForDeck(String deckId) {
+    if (_isTierPreviewEnabled()) {
+      return true;
+    }
+    final entries = _progressForDeck(deckId);
+    return entries.values.any((entry) => entry.total > 0);
+  }
+
+  bool _hasRecentProgressForDeck(String deckId, {int days = 30}) {
+    if (_isTierPreviewEnabled()) {
+      return true;
+    }
+    final entries = _progressForDeck(deckId);
+    final today = _stripTime(DateTime.now());
+    final start = today.subtract(Duration(days: days - 1));
+    final summary = _summarizeRange(entries, start, today);
+    return summary.total > 0;
+  }
+
+  Future<void> _resetProgressData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_ruleProgressKey);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _progressByDeck = <String, Map<String, _ProgressEntry>>{};
+    });
+  }
+
+  void _recordProgress(_QuestionSnapshot snapshot, bool isCorrect) {
+    final deckId = snapshot.deck.id;
+    final dateKey = _dateKey(_stripTime(DateTime.now()));
+    final existing = Map<String, _ProgressEntry>.from(_progressForDeck(deckId));
+    final entry = existing[dateKey] ?? const _ProgressEntry(correct: 0, total: 0);
+    existing[dateKey] = entry.copyWith(
+      correct: entry.correct + (isCorrect ? 1 : 0),
+      total: entry.total + 1,
+    );
+    setState(() {
+      _progressByDeck[deckId] = existing;
+    });
+    unawaited(_saveProgress());
   }
 
   Set<String> _availableCustomDeckIds() {
@@ -1245,10 +1784,53 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                 )
               : null,
           actions: [
-            IconButton(
-              onPressed: _openSettings,
+            PopupMenuButton<_AppMenuAction>(
               tooltip: l10n.settingsTitle,
-              icon: const Icon(Icons.settings),
+              icon: const Icon(Icons.more_vert),
+              onSelected: (action) {
+                if (action == _AppMenuAction.settings) {
+                  _openSettings();
+                } else if (action == _AppMenuAction.stats) {
+                  final deck = _selectedDeck;
+                  if (deck != null && deck.kind != DeckKind.custom) {
+                    _openStatsPage(deck);
+                  }
+                }
+              },
+              itemBuilder: (context) {
+                final deck = _selectedDeck;
+                final bool canShowStats = !_sessionActive &&
+                    deck != null &&
+                    deck.kind != DeckKind.custom &&
+                    _hasProgressForDeck(deck.id);
+                final items = <PopupMenuEntry<_AppMenuAction>>[
+                  PopupMenuItem(
+                    value: _AppMenuAction.settings,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.settings, size: 18),
+                        const SizedBox(width: 10),
+                        Text(l10n.settingsTitle),
+                      ],
+                    ),
+                  ),
+                ];
+                if (canShowStats) {
+                  items.add(
+                    PopupMenuItem(
+                      value: _AppMenuAction.stats,
+                      child: Row(
+                        children: [
+                          const Icon(Icons.show_chart, size: 18),
+                          const SizedBox(width: 10),
+                          Text(l10n.statsButton),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return items;
+              },
             ),
             if (_sessionActive)
               TextButton.icon(
@@ -1289,6 +1871,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
             ],
           ),
         ),
+        bottomNavigationBar:
+            _sessionActive ? null : _buildStartBar(),
       ),
     );
   }
@@ -1315,7 +1899,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         final double minHeight = max(420, constraints.maxHeight * 0.62);
         return Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: maxWidth,
@@ -1371,12 +1955,31 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     );
   }
 
+  void _openStatsPage(PracticeDeck deck) {
+    if (!_hasProgressForDeck(deck.id)) {
+      return;
+    }
+    final l10n = AppLocalizations.of(context)!;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => _StatsPage(
+          deckLabel: _deckLabel(deck, l10n),
+          accentColor: _deckAccentColor(deck),
+          entries: Map<String, _ProgressEntry>.from(
+            _progressForDeck(deck.id),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _openSettings() {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => SettingsPage(
           localeOverride: widget.localeOverride,
           onLocaleChanged: widget.onLocaleChanged,
+          onResetStats: _resetProgressData,
         ),
       ),
     );
@@ -1419,7 +2022,6 @@ class _TrainerHomePageState extends State<TrainerHomePage>
 
   Widget _buildControls() {
     final deck = _selectedDeck;
-    final canStartSession = _canPracticeDeck(deck);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final bool deckAvailable = deck != null && _isDeckAvailable(deck);
@@ -1428,6 +2030,11 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         deckAvailable &&
         _activeCustomDeckIds().isEmpty;
     final bool showUnavailableHint = deck != null && !deckAvailable;
+    final bool showProgressSnapshot = deck != null &&
+        deck.kind != DeckKind.custom &&
+        _hasRecentProgressForDeck(deck.id);
+    final Color highlightAccent =
+        deck != null ? _deckAccentColor(deck) : _accentWarm;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -1466,27 +2073,67 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                   ),
                 ),
                 const SizedBox(height: 20),
-                DropdownButtonFormField<PracticeDeck>(
-                  value: deck,
-                  isExpanded: true,
-                  hint: Text(l10n.chooseRuleHint),
-                  dropdownColor: _bgCard,
-                  icon: const Icon(Icons.expand_more),
-                  selectedItemBuilder: (context) {
-                    return _decks
-                        .map(
-                          (deck) => Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(_deckLabel(deck, l10n)),
-                          ),
-                        )
-                        .toList();
-                  },
-                  onChanged: (value) {
-                    if (value == null) return;
-                    _handleDeckSelection(value);
-                  },
-                  items: _deckDropdownItems(context),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: highlightAccent.withOpacity(0.35),
+                      width: 1.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: highlightAccent.withOpacity(0.15),
+                        blurRadius: 18,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: DropdownButtonFormField<PracticeDeck>(
+                    value: deck,
+                    isExpanded: true,
+                    hint: Text(l10n.chooseRuleHint),
+                    dropdownColor: _bgCard,
+                    icon: Icon(Icons.expand_more, color: highlightAccent),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: _bgCardAlt.withOpacity(0.95),
+                      prefixIcon: Icon(
+                        Icons.auto_awesome,
+                        color: highlightAccent,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 16,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    selectedItemBuilder: (context) {
+                      return _decks
+                          .map(
+                            (deck) => Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(_deckLabel(deck, l10n)),
+                            ),
+                          )
+                          .toList();
+                    },
+                    onChanged: (value) {
+                      if (value == null) return;
+                      _handleDeckSelection(value);
+                    },
+                    items: _deckDropdownItems(context),
+                  ),
                 ),
                 if (showUnavailableHint) ...[
                   const SizedBox(height: 10),
@@ -1532,22 +2179,259 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                     ],
                   ),
                 ],
+                if (showProgressSnapshot) ...[
+                  const SizedBox(height: 14),
+                  _buildProgressSnapshot(deck, l10n),
+                ],
                 if (showProBanners && !_isProUser) ...[
                   const SizedBox(height: 16),
                   _buildProBanner(),
                 ],
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: canStartSession ? _startSession : null,
-                    icon: const Icon(Icons.play_arrow, size: 20),
-                    label: Text(l10n.startSession),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStartBar() {
+    final deck = _selectedDeck;
+    final bool canStartSession = _canPracticeDeck(deck);
+    final l10n = AppLocalizations.of(context)!;
+    final Color accent =
+        deck != null ? _deckAccentColor(deck) : _accentWarm;
+    final Color endAccent = Color.lerp(accent, _accentCoral, 0.55) ??
+        _accentCoral;
+    return SafeArea(
+      minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: IgnorePointer(
+        ignoring: !canStartSession,
+        child: AnimatedOpacity(
+          opacity: canStartSession ? 1 : 0.5,
+          duration: const Duration(milliseconds: 200),
+          child: InkWell(
+            onTap: canStartSession ? _startSession : null,
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [accent, endAccent],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: accent.withOpacity(0.35),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.play_arrow, size: 22, color: Colors.black),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.startSession,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressSnapshot(PracticeDeck deck, AppLocalizations l10n) {
+    final entries = _progressForDeck(deck.id);
+    final today = _stripTime(DateTime.now());
+    final start = today.subtract(const Duration(days: 29));
+    final summary = _summarizeRange(entries, start, today);
+    final _TierPreview? preview = _tierPreviewOverrideInfo(l10n);
+    final _ProgressSummary effectiveSummary = preview == null
+        ? summary
+        : _ProgressSummary(correct: preview.correct, total: preview.total);
+    final bool hasData = preview != null || summary.total > 0;
+    final String percentText = hasData
+        ? '${(effectiveSummary.percent * 100).toStringAsFixed(0)}%'
+        : l10n.statsNoData;
+    final _TierInfo? tier = preview?.tier ??
+        (hasData ? _tierInfoForPercent(effectiveSummary.percent, l10n) : null);
+    final bool isTierS = tier?.assetPath == _assetTierS;
+    final String mascotAsset = tier?.assetPath ?? _assetMascotte;
+    final theme = Theme.of(context);
+    final accent = _deckAccentColor(deck);
+    final _PatternStyle patternStyle = _patternStyleForTier(tier);
+    final double patternOpacity = isTierS ? 0.65 : 0.45;
+    final Color cardBase =
+        isTierS ? const Color(0xFFFFF2FB) : _bgCardAlt;
+    final List<Color> cardGradient = isTierS
+        ? const [
+            Color(0xFFFFF7FD),
+            Color(0xFFFFE7F7),
+            Color(0xFFEAD8FF),
+          ]
+        : [_bgCardAlt, _bgCardAlt.withOpacity(0.9)];
+    final Color frameColor = isTierS
+        ? const Color(0xFFFF7AD1).withOpacity(0.8)
+        : accent.withOpacity(0.22);
+    final TextStyle percentStyle = theme.textTheme.headlineMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: isTierS ? Colors.black : (hasData ? Colors.white : theme.hintColor),
+          shadows: isTierS
+              ? [
+                  const Shadow(
+                    color: Color(0xFFFF5CD6),
+                    blurRadius: 12,
+                  ),
+                  const Shadow(
+                    color: Color(0xFF8A4CFF),
+                    blurRadius: 18,
+                  ),
+                ]
+              : null,
+        ) ??
+        TextStyle(
+          fontWeight: FontWeight.w700,
+          color: isTierS ? Colors.black : (hasData ? Colors.white : theme.hintColor),
+        );
+    return InkWell(
+      onTap: () => _openStatsPage(deck),
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cardBase,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: frameColor),
+          gradient: LinearGradient(
+            colors: cardGradient,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: isTierS
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFFFF5CD6).withOpacity(0.4),
+                    blurRadius: 26,
+                    offset: const Offset(0, 8),
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFF8A4CFF).withOpacity(0.25),
+                    blurRadius: 32,
+                    offset: const Offset(0, 10),
+                  ),
+                ]
+              : null,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: SizedBox(
+            height: 170,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: _PepPatternPainter(
+                        color: patternStyle.color.withOpacity(patternOpacity),
+                        gradientColors: patternStyle.gradientColors
+                            ?.map((color) => color.withOpacity(patternOpacity))
+                            .toList(),
+                      ),
                     ),
                   ),
                 ),
+                if (isTierS)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withOpacity(0.12),
+                              Colors.transparent,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                Positioned.fill(
+                  child: Align(
+                    alignment: const Alignment(0, 0.32),
+                    child: Transform.scale(
+                      scale: 1.55,
+                      child: Image.asset(
+                        mascotAsset,
+                        fit: BoxFit.contain,
+                        alignment: Alignment.center,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 12,
+                  top: 10,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        percentText,
+                        style: percentStyle,
+                      ),
+                    ],
+                  ),
+                ),
+                if (hasData)
+                  Positioned(
+                    left: 12,
+                    bottom: 10,
+                    child: _OutlinedText(
+                      text: l10n.statsCorrectOfTotal(
+                        effectiveSummary.correct,
+                        effectiveSummary.total,
+                      ),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                            color:
+                                isTierS ? Colors.black : Colors.white.withOpacity(0.85),
+                            fontWeight: FontWeight.w700,
+                            shadows: isTierS
+                                ? [
+                                    const Shadow(
+                                      color: Color(0xFFFF5CD6),
+                                      blurRadius: 10,
+                                    ),
+                                  ]
+                                : null,
+                          ) ??
+                          const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                      strokeWidth: 2,
+                      strokeColor: isTierS
+                          ? Colors.white.withOpacity(0.7)
+                          : Colors.black.withOpacity(0.7),
+                    ),
+                  ),
+                if (tier != null)
+                  Positioned(
+                    right: 10,
+                    bottom: 10,
+                    child: _TierBadge(tier: tier, compact: true),
+                  ),
               ],
             ),
           ),
@@ -1800,7 +2684,13 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   Widget _buildBottomControls() {
     final bool canNavigate = _sessionActive && _hasQuestion;
     final bool showSolutionStep = _hasQuestion && !_answerVisible;
+    final _AnswerResult currentResult = _currentAnswerResult();
+    final bool needsScore =
+        _answerVisible && currentResult == _AnswerResult.ungraded;
     final l10n = AppLocalizations.of(context)!;
+    final Widget actionRow = needsScore
+        ? _buildScoreLayout(canNavigate, l10n)
+        : _buildNavLayout(canNavigate, showSolutionStep, l10n);
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -1808,36 +2698,9 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed:
-                        _sessionActive && _historyIndex > 0
-                            ? _previousQuestion
-                            : null,
-                    icon: const Icon(Icons.arrow_back, size: 20),
-                    label: Text(l10n.backButton),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: canNavigate ? _handleForwardAction : null,
-                    icon: Icon(
-                      showSolutionStep
-                          ? Icons.visibility
-                          : Icons.arrow_forward,
-                      size: 20,
-                    ),
-                    label: Text(
-                      showSolutionStep
-                          ? l10n.showSolutionButton
-                          : l10n.nextButton,
-                    ),
-                  ),
-                ),
-              ],
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              child: actionRow,
             ),
             const SizedBox(height: 10),
             _buildProgressRow(),
@@ -1858,6 +2721,81 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     _nextQuestion();
   }
 
+  Widget _buildScoreButtons(bool canNavigate, AppLocalizations l10n) {
+    return Row(
+      key: const ValueKey('scoreButtons'),
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: canNavigate ? () => _markAnswerAndAdvance(false) : null,
+            icon: const Icon(Icons.close, size: 20),
+            label: Text(l10n.answerWrongButton),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: canNavigate ? () => _markAnswerAndAdvance(true) : null,
+            icon: const Icon(Icons.check, size: 20),
+            label: Text(l10n.answerCorrectButton),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNavLayout(
+    bool canNavigate,
+    bool showSolutionStep,
+    AppLocalizations l10n,
+  ) {
+    return Row(
+      key: const ValueKey('navRow'),
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed:
+                _sessionActive && _historyIndex > 0 ? _previousQuestion : null,
+            icon: const Icon(Icons.arrow_back, size: 20),
+            label: Text(l10n.backButton),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: canNavigate ? _handleForwardAction : null,
+            icon: Icon(
+              showSolutionStep ? Icons.visibility : Icons.arrow_forward,
+              size: 20,
+            ),
+            label: Text(
+              showSolutionStep ? l10n.showSolutionButton : l10n.nextButton,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildScoreLayout(bool canNavigate, AppLocalizations l10n) {
+    return Column(
+      key: const ValueKey('scoreLayout'),
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed:
+                _sessionActive && _historyIndex > 0 ? _previousQuestion : null,
+            icon: const Icon(Icons.arrow_back, size: 20),
+            label: Text(l10n.backButton),
+          ),
+        ),
+        const SizedBox(height: 10),
+        _buildScoreButtons(canNavigate, l10n),
+      ],
+    );
+  }
+
   void _revealAnswer() {
     if (_answerVisible || !_hasQuestion) {
       return;
@@ -1866,6 +2804,33 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       _answerVisible = true;
       _markAnswerVisible();
     });
+  }
+
+  _AnswerResult _currentAnswerResult() {
+    if (_historyIndex < 0 || _historyIndex >= _questionHistory.length) {
+      return _AnswerResult.ungraded;
+    }
+    return _questionHistory[_historyIndex].result;
+  }
+
+  void _markAnswerAndAdvance(bool isCorrect) {
+    if (!_sessionActive || !_hasQuestion) {
+      return;
+    }
+    if (_historyIndex < 0 || _historyIndex >= _questionHistory.length) {
+      return;
+    }
+    final current = _questionHistory[_historyIndex];
+    if (current.result == _AnswerResult.ungraded) {
+      final updated = current.copyWith(
+        result: isCorrect ? _AnswerResult.correct : _AnswerResult.wrong,
+      );
+      setState(() {
+        _questionHistory[_historyIndex] = updated;
+      });
+      _recordProgress(updated, isCorrect);
+    }
+    _nextQuestion();
   }
 
   void _markAnswerVisible() {
@@ -2385,6 +3350,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       answer: answer,
       answerReading: answerReading,
       answerVisible: false,
+      result: _AnswerResult.ungraded,
     );
 
     setState(() {
@@ -2424,6 +3390,528 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   }
 }
 
+enum _StatsRange { week, month }
+
+class _StatsPage extends StatefulWidget {
+  const _StatsPage({
+    required this.deckLabel,
+    required this.accentColor,
+    required this.entries,
+  });
+
+  final String deckLabel;
+  final Color accentColor;
+  final Map<String, _ProgressEntry> entries;
+
+  @override
+  State<_StatsPage> createState() => _StatsPageState();
+}
+
+class _StatsPageState extends State<_StatsPage> {
+  _StatsRange _range = _StatsRange.week;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final _TierPreview? preview = _tierPreviewOverrideInfo(l10n);
+    final bool hasAnyData =
+        preview != null || widget.entries.values.any((entry) => entry.total > 0);
+    if (!hasAnyData) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.statsTitle),
+        ),
+        body: const SizedBox.shrink(),
+      );
+    }
+    final today = _stripTime(DateTime.now());
+    final int rangeDays = _range == _StatsRange.week ? 7 : 30;
+    final currentStart = today.subtract(Duration(days: rangeDays - 1));
+    final previousEnd = currentStart.subtract(const Duration(days: 1));
+    final previousStart = previousEnd.subtract(Duration(days: rangeDays - 1));
+
+    final currentSummary =
+        _summarizeRange(widget.entries, currentStart, today);
+    final _ProgressSummary effectiveSummary = preview == null
+        ? currentSummary
+        : _ProgressSummary(correct: preview.correct, total: preview.total);
+    final previousSummary =
+        _summarizeRange(widget.entries, previousStart, previousEnd);
+
+    final points = _buildSeries(widget.entries, currentStart, rangeDays);
+    final bool hasSeriesData = points.any((point) => point.percent != null);
+    final bool hasCurrent = preview != null || currentSummary.total > 0;
+    final String percentText = hasCurrent
+        ? '${(effectiveSummary.percent * 100).toStringAsFixed(0)}%'
+        : l10n.statsNoData;
+    final _TierInfo? tier = preview?.tier ??
+        (hasCurrent ? _tierInfoForPercent(effectiveSummary.percent, l10n) : null);
+    final String mascotAsset = tier?.assetPath ?? _assetMascotte;
+
+    final DateFormat dateFormat =
+        DateFormat.MMMd(Localizations.localeOf(context).toString());
+    final String rangeLabel =
+        '${dateFormat.format(currentStart)} • ${dateFormat.format(today)}';
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.statsTitle),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        children: [
+          Text(
+            widget.deckLabel,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: _bgCard,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: widget.accentColor.withOpacity(0.25),
+              ),
+              gradient: LinearGradient(
+                colors: [
+                  _bgCard,
+                  widget.accentColor.withOpacity(0.08),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        percentText,
+                        style: theme.textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        hasCurrent
+                      ? l10n.statsCorrectOfTotal(
+                          effectiveSummary.correct,
+                          effectiveSummary.total,
+                        )
+                            : l10n.statsNoData,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (tier != null) _TierBadge(tier: tier),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _buildRangeChip(
+                label: l10n.statsRangeWeek,
+                selected: _range == _StatsRange.week,
+                onSelected: () => _setRange(_StatsRange.week),
+              ),
+              const SizedBox(width: 8),
+              _buildRangeChip(
+                label: l10n.statsRangeMonth,
+                selected: _range == _StatsRange.month,
+                onSelected: () => _setRange(_StatsRange.month),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSummaryCard(
+                  label: _range == _StatsRange.week
+                      ? l10n.statsThisWeek
+                      : l10n.statsThisMonth,
+                  summary: currentSummary,
+                  accent: widget.accentColor,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildSummaryCard(
+                  label: _range == _StatsRange.week
+                      ? l10n.statsLastWeek
+                      : l10n.statsLastMonth,
+                  summary: previousSummary,
+                  accent: _bgCardAlt,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _bgCard,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.06),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.statsTrendTitle,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    _buildMascotThumb(mascotAsset, widget.accentColor),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 190,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '100%',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.hintColor,
+                            ),
+                          ),
+                          Text(
+                            '50%',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.hintColor,
+                            ),
+                          ),
+                          Text(
+                            '0%',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.hintColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            CustomPaint(
+                              painter: _ProgressChartPainter(
+                                points: points,
+                                accentColor: widget.accentColor,
+                              ),
+                            ),
+                            if (!hasSeriesData)
+                              Center(
+                                child: Text(
+                                  l10n.statsNoData,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.hintColor,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  rangeLabel,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _setRange(_StatsRange range) {
+    setState(() {
+      _range = range;
+    });
+  }
+
+  Widget _buildRangeChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onSelected,
+  }) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onSelected(),
+      selectedColor: widget.accentColor,
+      backgroundColor: _bgCardAlt,
+      labelStyle: TextStyle(
+        color: selected ? Colors.black : Colors.white,
+        fontWeight: FontWeight.w600,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(999),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard({
+    required String label,
+    required _ProgressSummary summary,
+    required Color accent,
+  }) {
+    final theme = Theme.of(context);
+    final bool hasData = summary.total > 0;
+    final String percentText = hasData
+        ? '${(summary.percent * 100).toStringAsFixed(0)}%'
+        : AppLocalizations.of(context)!.statsNoData;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _bgCardAlt,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: accent.withOpacity(0.25),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.hintColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            percentText,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            hasData
+                ? AppLocalizations.of(context)!
+                    .statsCorrectOfTotal(summary.correct, summary.total)
+                : AppLocalizations.of(context)!.statsNoData,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.hintColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMascotThumb(String asset, Color accent) {
+    return Container(
+      width: 64,
+      height: 64,
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: accent.withOpacity(0.25),
+        ),
+        color: _bgCardAlt,
+      ),
+      child: Image.asset(
+        asset,
+        fit: BoxFit.contain,
+        alignment: Alignment.center,
+      ),
+    );
+  }
+}
+
+class _ProgressChartPainter extends CustomPainter {
+  const _ProgressChartPainter({
+    required this.points,
+    required this.accentColor,
+  });
+
+  final List<_ProgressPoint> points;
+  final Color accentColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint gridPaint = Paint()
+      ..color = Colors.white.withOpacity(0.06)
+      ..strokeWidth = 1;
+    for (final double level in [0.0, 0.5, 1.0]) {
+      final double y = size.height - (size.height * level);
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    if (points.isEmpty) {
+      return;
+    }
+
+    final double step =
+        points.length > 1 ? size.width / (points.length - 1) : 0;
+    final Paint linePaint = Paint()
+      ..color = accentColor
+      ..strokeWidth = 2.6
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final Paint pointPaint = Paint()
+      ..color = accentColor
+      ..style = PaintingStyle.fill;
+    final Paint fillPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..shader = LinearGradient(
+        colors: [
+          accentColor.withOpacity(0.35),
+          accentColor.withOpacity(0.05),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    Path? segmentPath;
+    double? segmentStartX;
+    double? segmentEndX;
+    final List<Offset> pointsOffsets = <Offset>[];
+
+    void drawSegment(Path path, double startX, double endX) {
+      final Path area = Path.from(path)
+        ..lineTo(endX, size.height)
+        ..lineTo(startX, size.height)
+        ..close();
+      canvas.drawPath(area, fillPaint);
+      canvas.drawPath(path, linePaint);
+    }
+
+    for (int i = 0; i < points.length; i++) {
+      final double? percent = points[i].percent;
+      final double x = step * i;
+      if (percent == null) {
+        if (segmentPath != null && segmentStartX != null && segmentEndX != null) {
+          drawSegment(segmentPath, segmentStartX, segmentEndX);
+        }
+        segmentPath = null;
+        segmentStartX = null;
+        segmentEndX = null;
+        continue;
+      }
+      final double y = size.height - (percent * size.height);
+      if (segmentPath == null) {
+        segmentPath = Path()..moveTo(x, y);
+        segmentStartX = x;
+      } else {
+        segmentPath.lineTo(x, y);
+      }
+      segmentEndX = x;
+      pointsOffsets.add(Offset(x, y));
+    }
+
+    if (segmentPath != null && segmentStartX != null && segmentEndX != null) {
+      drawSegment(segmentPath, segmentStartX, segmentEndX);
+    }
+
+    for (final point in pointsOffsets) {
+      canvas.drawCircle(point, 2.4, pointPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ProgressChartPainter oldDelegate) {
+    return oldDelegate.points != points ||
+        oldDelegate.accentColor != accentColor;
+  }
+}
+
+class _PepPatternPainter extends CustomPainter {
+  const _PepPatternPainter({
+    required this.color,
+    this.gradientColors,
+  });
+
+  final Color color;
+  final List<Color>? gradientColors;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const String label = 'ペラペラ';
+    final TextStyle baseStyle = TextStyle(
+      color: color,
+      fontSize: 20,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.6,
+      shadows: [
+        Shadow(color: color.withOpacity(0.65), blurRadius: 10),
+        Shadow(color: color.withOpacity(0.35), blurRadius: 18),
+      ],
+    );
+    final TextPainter measurePainter = TextPainter(
+      text: TextSpan(text: label, style: baseStyle),
+      textDirection: ui.TextDirection.ltr,
+    )..layout();
+
+    final int repeatCount =
+        (size.width / measurePainter.width).ceil() + 4;
+    final String rowText = List<String>.filled(repeatCount, label).join();
+    final double rowHeight = measurePainter.height + 6;
+    int rowIndex = 0;
+    for (double y = -rowHeight; y < size.height + rowHeight; y += rowHeight) {
+      final double xJitter = (rowIndex % 4) * 8 - 10;
+      final double yJitter = (rowIndex % 3) * 2 - 2;
+      final TextStyle rowStyle;
+      if (gradientColors == null) {
+        rowStyle = baseStyle;
+      } else {
+        final Paint paint = Paint()
+          ..shader = LinearGradient(
+            colors: gradientColors!,
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ).createShader(Rect.fromLTWH(0, y, size.width, rowHeight));
+        rowStyle = baseStyle.copyWith(foreground: paint);
+      }
+      final TextPainter rowPainter = TextPainter(
+        text: TextSpan(text: rowText, style: rowStyle),
+        textDirection: ui.TextDirection.ltr,
+      )..layout();
+      rowPainter.paint(canvas, Offset(-8 + xJitter, y + yJitter));
+      rowIndex++;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PepPatternPainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.gradientColors != gradientColors;
+  }
+}
+
 class _LanguageOption {
   const _LanguageOption(this.code, this.title, [this.subtitle]);
 
@@ -2457,10 +3945,12 @@ class SettingsPage extends StatefulWidget {
     super.key,
     required this.localeOverride,
     required this.onLocaleChanged,
+    required this.onResetStats,
   });
 
   final Locale? localeOverride;
   final ValueChanged<Locale?> onLocaleChanged;
+  final Future<void> Function() onResetStats;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -2527,6 +4017,39 @@ class _SettingsPageState extends State<SettingsPage> {
       _selectedCode = code;
     });
     widget.onLocaleChanged(_localeFromCode(code));
+  }
+
+  Future<void> _confirmResetStats() async {
+    final l10n = AppLocalizations.of(context)!;
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l10n.resetStatsConfirmTitle),
+          content: Text(l10n.resetStatsConfirmBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.resetStatsCancelButton),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.resetStatsConfirmButton),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true) {
+      return;
+    }
+    await widget.onResetStats();
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.resetStatsDone)),
+    );
   }
 
   @override
@@ -2613,6 +4136,18 @@ class _SettingsPageState extends State<SettingsPage> {
                         ],
                       ],
                     ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.refresh,
+                      color: _accentWarm,
+                    ),
+                    title: Text(l10n.resetStatsTitle),
+                    subtitle: Text(l10n.resetStatsSubtitle),
+                    onTap: _confirmResetStats,
                   ),
                 ),
                 const SizedBox(height: 16),

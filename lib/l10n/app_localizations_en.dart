@@ -48,6 +48,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportProblemError => 'Couldn\'t open the link.';
 
   @override
+  String get resetStatsTitle => 'Reset statistics';
+
+  @override
+  String get resetStatsSubtitle => 'Delete all saved accuracy data.';
+
+  @override
+  String get resetStatsConfirmTitle => 'Reset statistics?';
+
+  @override
+  String get resetStatsConfirmBody =>
+      'This will permanently delete your progress for all rules.';
+
+  @override
+  String get resetStatsConfirmButton => 'Reset';
+
+  @override
+  String get resetStatsCancelButton => 'Cancel';
+
+  @override
+  String get resetStatsDone => 'Statistics reset.';
+
+  @override
   String get chooseRuleTitle => 'Choose a rule';
 
   @override
@@ -76,13 +98,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get answerHint =>
-      'Tap \"Show solution\" and then \"Next\" to continue.';
+      'Tap \"Show solution\" and then choose \"Correct\" or \"Wrong\".';
 
   @override
   String get preparingFirstQuestion => 'Preparing the first question.';
 
   @override
   String get selectRuleToBegin => 'Select a rule to begin.';
+
+  @override
+  String get statsButton => 'Statistics';
+
+  @override
+  String get statsTitle => 'Progress';
+
+  @override
+  String get statsRangeWeek => 'Week';
+
+  @override
+  String get statsRangeMonth => 'Month';
+
+  @override
+  String get statsThisWeek => 'This week';
+
+  @override
+  String get statsLastWeek => 'Last week';
+
+  @override
+  String get statsThisMonth => 'This month';
+
+  @override
+  String get statsLastMonth => 'Last month';
+
+  @override
+  String get statsAccuracyLabel => 'Accuracy';
+
+  @override
+  String get statsLast30Days => 'Last 30 days';
+
+  @override
+  String statsCorrectOfTotal(Object correct, Object total) {
+    return 'Correct: $correct/$total';
+  }
+
+  @override
+  String get statsNoData => 'No data yet';
+
+  @override
+  String get statsTrendTitle => 'Progress trend';
+
+  @override
+  String get statsTierS => 'TIER S';
+
+  @override
+  String get statsTierA => 'TIER A';
+
+  @override
+  String get statsTierB => 'TIER B';
+
+  @override
+  String get statsTierC => 'TIER C';
+
+  @override
+  String get statsTierD => 'TIER D';
+
+  @override
+  String get statsTierFail => 'FAIL';
+
+  @override
+  String get answerCorrectButton => 'Correct';
+
+  @override
+  String get answerWrongButton => 'Wrong';
 
   @override
   String get proPill => 'Go Pro';
@@ -141,7 +228,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialLine2 =>
-      'Think of the answer, then tap \"Show solution\".';
+      'Think of the answer, then tap \"Show solution\" and rate yourself.';
 
   @override
   String get tutorialButton => 'Ok, let\'s go';

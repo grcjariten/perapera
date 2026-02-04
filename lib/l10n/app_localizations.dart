@@ -180,6 +180,48 @@ abstract class AppLocalizations {
   /// **'Couldn\'t open the link.'**
   String get reportProblemError;
 
+  /// No description provided for @resetStatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset statistics'**
+  String get resetStatsTitle;
+
+  /// No description provided for @resetStatsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all saved accuracy data.'**
+  String get resetStatsSubtitle;
+
+  /// No description provided for @resetStatsConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset statistics?'**
+  String get resetStatsConfirmTitle;
+
+  /// No description provided for @resetStatsConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete your progress for all rules.'**
+  String get resetStatsConfirmBody;
+
+  /// No description provided for @resetStatsConfirmButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get resetStatsConfirmButton;
+
+  /// No description provided for @resetStatsCancelButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get resetStatsCancelButton;
+
+  /// No description provided for @resetStatsDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics reset.'**
+  String get resetStatsDone;
+
   /// No description provided for @chooseRuleTitle.
   ///
   /// In en, this message translates to:
@@ -237,7 +279,7 @@ abstract class AppLocalizations {
   /// No description provided for @answerHint.
   ///
   /// In en, this message translates to:
-  /// **'Tap \"Show solution\" and then \"Next\" to continue.'**
+  /// **'Tap \"Show solution\" and then choose \"Correct\" or \"Wrong\".'**
   String get answerHint;
 
   /// No description provided for @preparingFirstQuestion.
@@ -251,6 +293,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select a rule to begin.'**
   String get selectRuleToBegin;
+
+  /// No description provided for @statsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get statsButton;
+
+  /// No description provided for @statsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get statsTitle;
+
+  /// No description provided for @statsRangeWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get statsRangeWeek;
+
+  /// No description provided for @statsRangeMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get statsRangeMonth;
+
+  /// No description provided for @statsThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get statsThisWeek;
+
+  /// No description provided for @statsLastWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Last week'**
+  String get statsLastWeek;
+
+  /// No description provided for @statsThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get statsThisMonth;
+
+  /// No description provided for @statsLastMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Last month'**
+  String get statsLastMonth;
+
+  /// No description provided for @statsAccuracyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy'**
+  String get statsAccuracyLabel;
+
+  /// No description provided for @statsLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get statsLast30Days;
+
+  /// No description provided for @statsCorrectOfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct: {correct}/{total}'**
+  String statsCorrectOfTotal(Object correct, Object total);
+
+  /// No description provided for @statsNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data yet'**
+  String get statsNoData;
+
+  /// No description provided for @statsTrendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress trend'**
+  String get statsTrendTitle;
+
+  /// No description provided for @statsTierS.
+  ///
+  /// In en, this message translates to:
+  /// **'TIER S'**
+  String get statsTierS;
+
+  /// No description provided for @statsTierA.
+  ///
+  /// In en, this message translates to:
+  /// **'TIER A'**
+  String get statsTierA;
+
+  /// No description provided for @statsTierB.
+  ///
+  /// In en, this message translates to:
+  /// **'TIER B'**
+  String get statsTierB;
+
+  /// No description provided for @statsTierC.
+  ///
+  /// In en, this message translates to:
+  /// **'TIER C'**
+  String get statsTierC;
+
+  /// No description provided for @statsTierD.
+  ///
+  /// In en, this message translates to:
+  /// **'TIER D'**
+  String get statsTierD;
+
+  /// No description provided for @statsTierFail.
+  ///
+  /// In en, this message translates to:
+  /// **'FAIL'**
+  String get statsTierFail;
+
+  /// No description provided for @answerCorrectButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct'**
+  String get answerCorrectButton;
+
+  /// No description provided for @answerWrongButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong'**
+  String get answerWrongButton;
 
   /// No description provided for @proPill.
   ///
@@ -363,7 +531,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialLine2.
   ///
   /// In en, this message translates to:
-  /// **'Think of the answer, then tap \"Show solution\".'**
+  /// **'Think of the answer, then tap \"Show solution\" and rate yourself.'**
   String get tutorialLine2;
 
   /// No description provided for @tutorialButton.

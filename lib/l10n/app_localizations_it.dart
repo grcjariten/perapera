@@ -48,6 +48,29 @@ class AppLocalizationsIt extends AppLocalizations {
   String get reportProblemError => 'Impossibile aprire il link.';
 
   @override
+  String get resetStatsTitle => 'Azzera statistiche';
+
+  @override
+  String get resetStatsSubtitle =>
+      'Elimina tutti i dati di precisione salvati.';
+
+  @override
+  String get resetStatsConfirmTitle => 'Azzerare le statistiche?';
+
+  @override
+  String get resetStatsConfirmBody =>
+      'Questa azione elimina definitivamente i progressi di tutte le regole.';
+
+  @override
+  String get resetStatsConfirmButton => 'Azzera';
+
+  @override
+  String get resetStatsCancelButton => 'Annulla';
+
+  @override
+  String get resetStatsDone => 'Statistiche azzerate.';
+
+  @override
   String get chooseRuleTitle => 'Scegli la regola';
 
   @override
@@ -78,13 +101,78 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get answerHint =>
-      'Tocca \"Mostra soluzione\" e poi \"Avanti\" per continuare.';
+      'Tocca \"Mostra soluzione\" e poi scegli \"Corretto\" o \"Sbagliato\".';
 
   @override
   String get preparingFirstQuestion => 'Sto preparando la prima domanda.';
 
   @override
   String get selectRuleToBegin => 'Seleziona una regola per iniziare.';
+
+  @override
+  String get statsButton => 'Statistiche';
+
+  @override
+  String get statsTitle => 'Progresso';
+
+  @override
+  String get statsRangeWeek => 'Settimana';
+
+  @override
+  String get statsRangeMonth => 'Mese';
+
+  @override
+  String get statsThisWeek => 'Questa settimana';
+
+  @override
+  String get statsLastWeek => 'Settimana scorsa';
+
+  @override
+  String get statsThisMonth => 'Questo mese';
+
+  @override
+  String get statsLastMonth => 'Mese scorso';
+
+  @override
+  String get statsAccuracyLabel => 'Precisione';
+
+  @override
+  String get statsLast30Days => 'Ultimi 30 giorni';
+
+  @override
+  String statsCorrectOfTotal(Object correct, Object total) {
+    return 'Corrette: $correct/$total';
+  }
+
+  @override
+  String get statsNoData => 'Nessun dato';
+
+  @override
+  String get statsTrendTitle => 'Andamento';
+
+  @override
+  String get statsTierS => 'TIER S';
+
+  @override
+  String get statsTierA => 'TIER A';
+
+  @override
+  String get statsTierB => 'TIER B';
+
+  @override
+  String get statsTierC => 'TIER C';
+
+  @override
+  String get statsTierD => 'TIER D';
+
+  @override
+  String get statsTierFail => 'FAIL';
+
+  @override
+  String get answerCorrectButton => 'Corretto';
+
+  @override
+  String get answerWrongButton => 'Sbagliato';
 
   @override
   String get proPill => 'Passa a Pro';
@@ -143,7 +231,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get tutorialLine2 =>
-      'Pensa alla risposta e poi tocca \"Mostra soluzione\".';
+      'Pensa alla risposta, poi tocca \"Mostra soluzione\" e valuta la risposta.';
 
   @override
   String get tutorialButton => 'Ok, si parte';
