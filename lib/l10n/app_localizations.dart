@@ -630,6 +630,24 @@ abstract class AppLocalizations {
   /// **'ageru/kureru/morau'**
   String get ruleAgeruKureruMorau;
 
+  /// No description provided for @ruleCausative.
+  ///
+  /// In en, this message translates to:
+  /// **'Causative'**
+  String get ruleCausative;
+
+  /// No description provided for @ruleCausativeGiveReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'Causative + te ageru/kureru/morau'**
+  String get ruleCausativeGiveReceive;
+
+  /// No description provided for @ruleNasai.
+  ///
+  /// In en, this message translates to:
+  /// **'-nasai'**
+  String get ruleNasai;
+
   /// No description provided for @ruleTara.
   ///
   /// In en, this message translates to:

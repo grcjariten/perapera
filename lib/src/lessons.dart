@@ -362,6 +362,46 @@ const List<Lesson> lessonCatalog = <Lesson>[
           ),
         ],
       ),
+      LessonTopic(
+        title: 'Causativo',
+        description:
+            'Indica far fare o lasciare fare. Ru-verbi → させる, u-verbi → (a + せる), irregolari する→させる, 来る→来させる.',
+        patterns: <String>[
+          '食べる → 食べさせる',
+          '行く → 行かせる / 読む → 読ませる',
+          'する → させる / 来る → 来させる',
+        ],
+        examples: <String>[
+          '母は子どもに野菜を食べさせます。',
+          '先生は学生に漢字を書かせます。',
+        ],
+      ),
+      LessonTopic(
+        title: 'Causativo + te ageru/kureru/morau',
+        description:
+            'Forma causativa + てあげる/くれる/もらう per dare o ricevere l\'azione di far fare.',
+        patterns: <String>[
+          '食べさせてあげる / 食べさせてくれる / 食べさせてもらう',
+        ],
+        examples: <String>[
+          '弟にゲームをさせてあげます。',
+          '先生が宿題をやらせてくれました。',
+        ],
+      ),
+      LessonTopic(
+        title: '-nasai',
+        description:
+            'Imperativo gentile: forma in -ます senza ます + なさい.',
+        patterns: <String>[
+          '食べる → 食べなさい',
+          '書く → 書きなさい',
+          'する → しなさい',
+        ],
+        examples: <String>[
+          '早く寝なさい。',
+          '漢字を覚えなさい。',
+        ],
+      ),
     ],
   ),
 ];

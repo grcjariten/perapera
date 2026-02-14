@@ -279,6 +279,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ruleAgeruKureruMorau => 'ageru/kureru/morau';
 
   @override
+  String get ruleCausative => 'Causative';
+
+  @override
+  String get ruleCausativeGiveReceive => 'Causative + te ageru/kureru/morau';
+
+  @override
+  String get ruleNasai => '-nasai';
+
+  @override
   String get ruleTara => '~tara';
 
   @override

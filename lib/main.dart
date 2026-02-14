@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:ui' as ui;
 
+import 'package:characters/characters.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -224,6 +225,9 @@ const double _tierThresholdA = 0.9;
 const double _tierThresholdB = 0.8;
 const double _tierThresholdC = 0.7;
 const double _tierThresholdD = 0.6;
+const int _tierSnapshotMinimumTotal = 30;
+const int _tierStatsMinimumTotal = 20;
+const double _mascotBobAmplitude = 4.0;
 
 class PracticeDeck {
   const PracticeDeck.verbs(this.mode)
@@ -265,7 +269,6 @@ class PracticeDeck {
     }
     return 'topic_${topic?.title ?? ''}';
   }
-
 }
 
 enum _AnswerResult { ungraded, correct, wrong }
@@ -377,10 +380,20 @@ class _PatternStyle {
   const _PatternStyle({
     required this.color,
     this.gradientColors,
+    this.glowColor,
+    this.darkerEvery = 0,
+    this.highlightEvery = 0,
+    this.highlightColor,
+    this.highlightGlowColor,
   });
 
   final Color color;
   final List<Color>? gradientColors;
+  final Color? glowColor;
+  final int darkerEvery;
+  final int highlightEvery;
+  final Color? highlightColor;
+  final Color? highlightGlowColor;
 }
 
 bool _isTierPreviewEnabled() {
@@ -435,29 +448,48 @@ _PatternStyle _patternStyleForTier(_TierInfo? tier) {
   if (tier == null) {
     return _PatternStyle(
       color: Color.lerp(_bgCardAlt, Colors.black, 0.35) ?? _bgCardAlt,
+      darkerEvery: 5,
     );
   }
   switch (tier.assetPath) {
     case _assetTierS:
       return const _PatternStyle(
-        color: Color(0xFFFF4DA6),
-        gradientColors: [
-          Color(0xFFFF6FB1),
-          Color(0xFFFF2E8B),
-          Color(0xFF8A4CFF),
-        ],
+        color: Color(0xFFFF3D95),
+        highlightEvery: 7,
+        highlightColor: Colors.white,
+        highlightGlowColor: Color(0xFFFF3D95),
       );
     case _assetTierA:
       return const _PatternStyle(
         color: Color(0xFF3FE6FF),
+        highlightEvery: 7,
+        highlightColor: Colors.white,
+        highlightGlowColor: Color(0xFF3FE6FF),
       );
     case _assetTierB:
       return const _PatternStyle(
-        color: Color(0xFFFFB04A),
+        color: Color(0xFFFF4DA6),
+        glowColor: Color(0xFFFF3B30),
+        highlightEvery: 7,
+        highlightColor: _proGold,
       );
-    default:
+    case _assetTierC:
+      return _PatternStyle(
+        color: Color.lerp(_bgCardAlt, Colors.black, 0.42) ?? _bgCardAlt,
+        highlightEvery: 7,
+        highlightColor: const Color(0xFF0B0D10),
+      );
+    case _assetTierD:
       return _PatternStyle(
         color: Color.lerp(_bgCardAlt, Colors.black, 0.3) ?? _bgCardAlt,
+        darkerEvery: 5,
+      );
+    default:
+      final Color base =
+          Color.lerp(_bgCardAlt, Colors.black, 0.3) ?? _bgCardAlt;
+      return _PatternStyle(
+        color: base,
+        gradientColors: [base, base],
       );
   }
 }
@@ -489,8 +521,7 @@ class _TierBadge extends StatelessWidget {
             Color.lerp(tier.accent, Colors.white, 0.24) ?? tier.accent,
             tier.accent,
           ];
-    final Color glowColor =
-        isTierS ? const Color(0xFFFF4DA6) : tier.accent;
+    final Color glowColor = isTierS ? const Color(0xFFFF4DA6) : tier.accent;
     return Container(
       padding: padding,
       decoration: BoxDecoration(
@@ -726,51 +757,111 @@ _TierInfo _tierInfoForPercent(double percent, AppLocalizations l10n) {
 }
 
 const Map<String, String> _godanIMap = <String, String>{
-  'う': 'い',
-  'く': 'き',
-  'ぐ': 'ぎ',
-  'す': 'し',
-  'つ': 'ち',
-  'ぬ': 'に',
-  'ぶ': 'び',
-  'む': 'み',
-  'る': 'り',
+  'ã†': 'ã„',
+  'ã': 'ã',
+  'ã': 'ãŽ',
+  'ã™': 'ã—',
+  'ã¤': 'ã¡',
+  'ã¬': 'ã«',
+  'ã¶': 'ã³',
+  'ã‚€': 'ã¿',
+  'ã‚‹': 'ã‚Š',
 };
 
 const Map<String, String> _godanOMap = <String, String>{
-  'う': 'おう',
-  'く': 'こう',
-  'ぐ': 'ごう',
-  'す': 'そう',
-  'つ': 'とう',
-  'ぬ': 'のう',
-  'ぶ': 'ぼう',
-  'む': 'もう',
-  'る': 'ろう',
+  'ã†': 'ãŠã†',
+  'ã': 'ã“ã†',
+  'ã': 'ã”ã†',
+  'ã™': 'ãã†',
+  'ã¤': 'ã¨ã†',
+  'ã¬': 'ã®ã†',
+  'ã¶': 'ã¼ã†',
+  'ã‚€': 'ã‚‚ã†',
+  'ã‚‹': 'ã‚ã†',
 };
 
 const Map<String, String> _godanEMap = <String, String>{
-  'う': 'えば',
-  'く': 'けば',
-  'ぐ': 'げば',
-  'す': 'せば',
-  'つ': 'てば',
-  'ぬ': 'ねば',
-  'ぶ': 'べば',
-  'む': 'めば',
-  'る': 'れば',
+  'ã†': 'ãˆã°',
+  'ã': 'ã‘ã°',
+  'ã': 'ã’ã°',
+  'ã™': 'ã›ã°',
+  'ã¤': 'ã¦ã°',
+  'ã¬': 'ã­ã°',
+  'ã¶': 'ã¹ã°',
+  'ã‚€': 'ã‚ã°',
+  'ã‚‹': 'ã‚Œã°',
 };
 
-String _teSurface(VerbEntry verb) =>
-    verb.conjugationFor(TrainerMode.te).answer;
-String _taSurface(VerbEntry verb) =>
-    verb.conjugationFor(TrainerMode.ta).answer;
+const Map<String, String> _godanAMap = <String, String>{
+  'ã†': 'ã‚',
+  'ã': 'ã‹',
+  'ã': 'ãŒ',
+  'ã™': 'ã•',
+  'ã¤': 'ãŸ',
+  'ã¬': 'ãª',
+  'ã¶': 'ã°',
+  'ã‚€': 'ã¾',
+  'ã‚‹': 'ã‚‰',
+};
+
+String _teSurface(VerbEntry verb) => verb.conjugationFor(TrainerMode.te).answer;
+String _taSurface(VerbEntry verb) => verb.conjugationFor(TrainerMode.ta).answer;
 String _naiSurface(VerbEntry verb) =>
     verb.conjugationFor(TrainerMode.nai).answer;
 
 String _teReading(VerbEntry verb) => verb.readingFor(TrainerMode.te);
 String _taReading(VerbEntry verb) => verb.readingFor(TrainerMode.ta);
 String _naiReading(VerbEntry verb) => verb.readingFor(TrainerMode.nai);
+
+String _ruToTe(String text) {
+  if (text.endsWith('ã‚‹')) {
+    return '${text.substring(0, text.length - 1)}ã¦';
+  }
+  return '${text}ã¦';
+}
+
+String _causativeSurface(VerbEntry verb) {
+  switch (verb.verbClass) {
+    case VerbClass.godan:
+      final String stem =
+          verb.dictionary.substring(0, verb.dictionary.length - 1);
+      final String ending =
+          verb.dictionary.substring(verb.dictionary.length - 1);
+      return '$stem${_godanAMap[ending] ?? ''}ã›ã‚‹';
+    case VerbClass.ichidan:
+      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}ã•ã›ã‚‹';
+    case VerbClass.suru:
+      return 'ã•ã›ã‚‹';
+    case VerbClass.kuru:
+      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}ã•ã›ã‚‹';
+    case VerbClass.suruCompound:
+      final String prefix =
+          verb.dictionary.substring(0, verb.dictionary.length - 2);
+      return '${prefix}ã•ã›ã‚‹';
+  }
+}
+
+String _causativeReading(VerbEntry verb) {
+  switch (verb.verbClass) {
+    case VerbClass.godan:
+      final String stem = verb.reading.substring(0, verb.reading.length - 1);
+      final String ending = verb.reading.substring(verb.reading.length - 1);
+      return '$stem${_godanAMap[ending] ?? ''}ã›ã‚‹';
+    case VerbClass.ichidan:
+      return '${verb.reading.substring(0, verb.reading.length - 1)}ã•ã›ã‚‹';
+    case VerbClass.suru:
+      return 'ã•ã›ã‚‹';
+    case VerbClass.kuru:
+      return 'ã“ã•ã›ã‚‹';
+    case VerbClass.suruCompound:
+      final String prefix = verb.reading.substring(0, verb.reading.length - 2);
+      return '${prefix}ã•ã›ã‚‹';
+  }
+}
+
+String _causativeTeSurface(VerbEntry verb) => _ruToTe(_causativeSurface(verb));
+
+String _causativeTeReading(VerbEntry verb) => _ruToTe(_causativeReading(verb));
 
 String _masuStemSurface(VerbEntry verb) {
   switch (verb.verbClass) {
@@ -783,13 +874,13 @@ String _masuStemSurface(VerbEntry verb) {
     case VerbClass.ichidan:
       return verb.dictionary.substring(0, verb.dictionary.length - 1);
     case VerbClass.suru:
-      return 'し';
+      return 'ã—';
     case VerbClass.kuru:
       return verb.dictionary.substring(0, verb.dictionary.length - 1);
     case VerbClass.suruCompound:
       final String prefix =
           verb.dictionary.substring(0, verb.dictionary.length - 2);
-      return '${prefix}し';
+      return '${prefix}ã—';
   }
 }
 
@@ -802,13 +893,12 @@ String _masuStemReading(VerbEntry verb) {
     case VerbClass.ichidan:
       return verb.reading.substring(0, verb.reading.length - 1);
     case VerbClass.suru:
-      return 'し';
+      return 'ã—';
     case VerbClass.kuru:
-      return 'き';
+      return 'ã';
     case VerbClass.suruCompound:
-      final String prefix =
-          verb.reading.substring(0, verb.reading.length - 2);
-      return '${prefix}し';
+      final String prefix = verb.reading.substring(0, verb.reading.length - 2);
+      return '${prefix}ã—';
   }
 }
 
@@ -821,15 +911,15 @@ String _volitionalSurface(VerbEntry verb) {
           verb.dictionary.substring(verb.dictionary.length - 1);
       return '$stem${_godanOMap[ending] ?? ''}';
     case VerbClass.ichidan:
-      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}よう';
+      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}ã‚ˆã†';
     case VerbClass.suru:
-      return 'しよう';
+      return 'ã—ã‚ˆã†';
     case VerbClass.kuru:
-      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}よう';
+      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}ã‚ˆã†';
     case VerbClass.suruCompound:
       final String prefix =
           verb.dictionary.substring(0, verb.dictionary.length - 2);
-      return '${prefix}しよう';
+      return '${prefix}ã—ã‚ˆã†';
   }
 }
 
@@ -840,15 +930,14 @@ String _volitionalReading(VerbEntry verb) {
       final String ending = verb.reading.substring(verb.reading.length - 1);
       return '$stem${_godanOMap[ending] ?? ''}';
     case VerbClass.ichidan:
-      return '${verb.reading.substring(0, verb.reading.length - 1)}よう';
+      return '${verb.reading.substring(0, verb.reading.length - 1)}ã‚ˆã†';
     case VerbClass.suru:
-      return 'しよう';
+      return 'ã—ã‚ˆã†';
     case VerbClass.kuru:
-      return 'こよう';
+      return 'ã“ã‚ˆã†';
     case VerbClass.suruCompound:
-      final String prefix =
-          verb.reading.substring(0, verb.reading.length - 2);
-      return '${prefix}しよう';
+      final String prefix = verb.reading.substring(0, verb.reading.length - 2);
+      return '${prefix}ã—ã‚ˆã†';
   }
 }
 
@@ -861,15 +950,15 @@ String _baSurface(VerbEntry verb) {
           verb.dictionary.substring(verb.dictionary.length - 1);
       return '$stem${_godanEMap[ending] ?? ''}';
     case VerbClass.ichidan:
-      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}れば';
+      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}ã‚Œã°';
     case VerbClass.suru:
-      return 'すれば';
+      return 'ã™ã‚Œã°';
     case VerbClass.kuru:
-      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}れば';
+      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}ã‚Œã°';
     case VerbClass.suruCompound:
       final String prefix =
           verb.dictionary.substring(0, verb.dictionary.length - 2);
-      return '${prefix}すれば';
+      return '${prefix}ã™ã‚Œã°';
   }
 }
 
@@ -880,62 +969,78 @@ String _baReading(VerbEntry verb) {
       final String ending = verb.reading.substring(verb.reading.length - 1);
       return '$stem${_godanEMap[ending] ?? ''}';
     case VerbClass.ichidan:
-      return '${verb.reading.substring(0, verb.reading.length - 1)}れば';
+      return '${verb.reading.substring(0, verb.reading.length - 1)}ã‚Œã°';
     case VerbClass.suru:
-      return 'すれば';
+      return 'ã™ã‚Œã°';
     case VerbClass.kuru:
-      return '${verb.reading.substring(0, verb.reading.length - 1)}れば';
+      return '${verb.reading.substring(0, verb.reading.length - 1)}ã‚Œã°';
     case VerbClass.suruCompound:
-      final String prefix =
-          verb.reading.substring(0, verb.reading.length - 2);
-      return '${prefix}すれば';
+      final String prefix = verb.reading.substring(0, verb.reading.length - 2);
+      return '${prefix}ã™ã‚Œã°';
   }
 }
 
 final Map<String, _VerbRule> _customRules = <String, _VerbRule>{
   '~shi': _VerbRule(
     title: '~shi',
-    buildAnswer: (verb) => '${verb.dictionary}し',
-    buildReading: (verb) => '${verb.reading}し',
+    buildAnswer: (verb) => '${verb.dictionary}ã—',
+    buildReading: (verb) => '${verb.reading}ã—',
   ),
   '~sou desu': _VerbRule(
     title: '~sou desu',
-    buildAnswer: (verb) => '${_masuStemSurface(verb)}そうです',
-    buildReading: (verb) => '${_masuStemReading(verb)}そうです',
+    buildAnswer: (verb) => '${_masuStemSurface(verb)}ãã†ã§ã™',
+    buildReading: (verb) => '${_masuStemReading(verb)}ãã†ã§ã™',
   ),
   '~te miru': _VerbRule(
     title: '~te miru',
-    buildAnswer: (verb) => '${_teSurface(verb)}みる',
-    buildReading: (verb) => '${_teReading(verb)}みる',
+    buildAnswer: (verb) => '${_teSurface(verb)}ã¿ã‚‹',
+    buildReading: (verb) => '${_teReading(verb)}ã¿ã‚‹',
   ),
   'Nara': _VerbRule(
     title: 'Nara',
-    buildAnswer: (verb) => '${verb.dictionary}なら',
-    buildReading: (verb) => '${verb.reading}なら',
+    buildAnswer: (verb) => '${verb.dictionary}ãªã‚‰',
+    buildReading: (verb) => '${verb.reading}ãªã‚‰',
   ),
   'hoshi': _VerbRule(
     title: 'hoshi',
-    buildAnswer: (verb) => '${_teSurface(verb)}ほしい',
-    buildReading: (verb) => '${_teReading(verb)}ほしい',
+    buildAnswer: (verb) => '${_teSurface(verb)}ã»ã—ã„',
+    buildReading: (verb) => '${_teReading(verb)}ã»ã—ã„',
   ),
   'ageru/kureru/morau': _VerbRule(
     title: 'ageru/kureru/morau',
     buildAnswer: (verb) =>
-        '${_teSurface(verb)}あげる / ${_teSurface(verb)}くれる / ${_teSurface(verb)}もらう',
+        '${_teSurface(verb)}ã‚ã’ã‚‹ / ${_teSurface(verb)}ãã‚Œã‚‹ / ${_teSurface(verb)}ã‚‚ã‚‰ã†',
     buildReading: (verb) =>
-        '${_teReading(verb)}あげる / ${_teReading(verb)}くれる / ${_teReading(verb)}もらう',
+        '${_teReading(verb)}ã‚ã’ã‚‹ / ${_teReading(verb)}ãã‚Œã‚‹ / ${_teReading(verb)}ã‚‚ã‚‰ã†',
+  ),
+  'Causativo': _VerbRule(
+    title: 'Causativo',
+    buildAnswer: _causativeSurface,
+    buildReading: _causativeReading,
+  ),
+  'Causativo + te ageru/kureru/morau': _VerbRule(
+    title: 'Causativo + te ageru/kureru/morau',
+    buildAnswer: (verb) =>
+        '${_causativeTeSurface(verb)}ã‚ã’ã‚‹ / ${_causativeTeSurface(verb)}ãã‚Œã‚‹ / ${_causativeTeSurface(verb)}ã‚‚ã‚‰ã†',
+    buildReading: (verb) =>
+        '${_causativeTeReading(verb)}ã‚ã’ã‚‹ / ${_causativeTeReading(verb)}ãã‚Œã‚‹ / ${_causativeTeReading(verb)}ã‚‚ã‚‰ã†',
+  ),
+  '-nasai': _VerbRule(
+    title: '-nasai',
+    buildAnswer: (verb) => '${_masuStemSurface(verb)}ãªã•ã„',
+    buildReading: (verb) => '${_masuStemReading(verb)}ãªã•ã„',
   ),
   '~tara': _VerbRule(
     title: '~tara',
-    buildAnswer: (verb) => '${_taSurface(verb)}ら',
-    buildReading: (verb) => '${_taReading(verb)}ら',
+    buildAnswer: (verb) => '${_taSurface(verb)}ã‚‰',
+    buildReading: (verb) => '${_taReading(verb)}ã‚‰',
   ),
   'number + mo / shika': _VerbRule(
     title: 'number + mo / shika',
     buildAnswer: (verb) =>
-        '一つも${_naiSurface(verb)} / 一つしか${_naiSurface(verb)}',
+        'ä¸€ã¤ã‚‚${_naiSurface(verb)} / ä¸€ã¤ã—ã‹${_naiSurface(verb)}',
     buildReading: (verb) =>
-        'ひとつも${_naiReading(verb)} / ひとつしか${_naiReading(verb)}',
+        'ã²ã¨ã¤ã‚‚${_naiReading(verb)} / ã²ã¨ã¤ã—ã‹${_naiReading(verb)}',
   ),
   'Volitiva': _VerbRule(
     title: 'Volitiva',
@@ -944,23 +1049,23 @@ final Map<String, _VerbRule> _customRules = <String, _VerbRule>{
   ),
   'Volitivo + to omotte': _VerbRule(
     title: 'Volitivo + to omotte',
-    buildAnswer: (verb) => '${_volitionalSurface(verb)}と思って',
-    buildReading: (verb) => '${_volitionalReading(verb)}とおもって',
+    buildAnswer: (verb) => '${_volitionalSurface(verb)}ã¨æ€ã£ã¦',
+    buildReading: (verb) => '${_volitionalReading(verb)}ã¨ãŠã‚‚ã£ã¦',
   ),
   '~te oku': _VerbRule(
     title: '~te oku',
-    buildAnswer: (verb) => '${_teSurface(verb)}おく',
-    buildReading: (verb) => '${_teReading(verb)}おく',
+    buildAnswer: (verb) => '${_teSurface(verb)}ãŠã',
+    buildReading: (verb) => '${_teReading(verb)}ãŠã',
   ),
   'Relative': _VerbRule(
     title: 'Relative',
-    buildAnswer: (verb) => '${verb.dictionary}時',
-    buildReading: (verb) => '${verb.reading}とき',
+    buildAnswer: (verb) => '${verb.dictionary}æ™‚',
+    buildReading: (verb) => '${verb.reading}ã¨ã',
   ),
   '~nagara': _VerbRule(
     title: '~nagara',
-    buildAnswer: (verb) => '${_masuStemSurface(verb)}ながら',
-    buildReading: (verb) => '${_masuStemReading(verb)}ながら',
+    buildAnswer: (verb) => '${_masuStemSurface(verb)}ãªãŒã‚‰',
+    buildReading: (verb) => '${_masuStemReading(verb)}ãªãŒã‚‰',
   ),
   'Forma ba': _VerbRule(
     title: 'Forma ba',
@@ -1368,7 +1473,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final deckId = snapshot.deck.id;
     final dateKey = _dateKey(_stripTime(DateTime.now()));
     final existing = Map<String, _ProgressEntry>.from(_progressForDeck(deckId));
-    final entry = existing[dateKey] ?? const _ProgressEntry(correct: 0, total: 0);
+    final entry =
+        existing[dateKey] ?? const _ProgressEntry(correct: 0, total: 0);
     existing[dateKey] = entry.copyWith(
       correct: entry.correct + (isCorrect ? 1 : 0),
       total: entry.total + 1,
@@ -1611,6 +1717,12 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         return l10n.ruleHoshi;
       case 'ageru/kureru/morau':
         return l10n.ruleAgeruKureruMorau;
+      case 'Causativo':
+        return l10n.ruleCausative;
+      case 'Causativo + te ageru/kureru/morau':
+        return l10n.ruleCausativeGiveReceive;
+      case '-nasai':
+        return l10n.ruleNasai;
       case '~tara':
         return l10n.ruleTara;
       case 'number + mo / shika':
@@ -1727,10 +1839,10 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final l10n = AppLocalizations.of(context)!;
     final TextStyle titleStyle =
         Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontFamily: 'PlayfairDisplay',
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.4,
-            ) ??
+                  fontFamily: 'PlayfairDisplay',
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.4,
+                ) ??
             const TextStyle(
               fontSize: 22,
               fontFamily: 'PlayfairDisplay',
@@ -1867,12 +1979,14 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                 left: -80,
                 child: _buildGlow(const Color(0x334DD0E1), 260),
               ),
-              if (_sessionActive) _buildSessionBody() else _buildSelectionBody(),
+              if (_sessionActive)
+                _buildSessionBody()
+              else
+                _buildSelectionBody(),
             ],
           ),
         ),
-        bottomNavigationBar:
-            _sessionActive ? null : _buildStartBar(),
+        bottomNavigationBar: _sessionActive ? null : _buildStartBar(),
       ),
     );
   }
@@ -1956,9 +2070,6 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   }
 
   void _openStatsPage(PracticeDeck deck) {
-    if (!_hasProgressForDeck(deck.id)) {
-      return;
-    }
     final l10n = AppLocalizations.of(context)!;
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -2025,14 +2136,13 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final bool deckAvailable = deck != null && _isDeckAvailable(deck);
-    final bool customSelectionEmpty =
-        deck?.kind == DeckKind.custom &&
+    final bool customSelectionEmpty = deck?.kind == DeckKind.custom &&
         deckAvailable &&
         _activeCustomDeckIds().isEmpty;
     final bool showUnavailableHint = deck != null && !deckAvailable;
     final bool showProgressSnapshot = deck != null &&
         deck.kind != DeckKind.custom &&
-        _hasRecentProgressForDeck(deck.id);
+        (deckAvailable || _hasRecentProgressForDeck(deck.id));
     final Color highlightAccent =
         deck != null ? _deckAccentColor(deck) : _accentWarm;
 
@@ -2199,10 +2309,9 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final deck = _selectedDeck;
     final bool canStartSession = _canPracticeDeck(deck);
     final l10n = AppLocalizations.of(context)!;
-    final Color accent =
-        deck != null ? _deckAccentColor(deck) : _accentWarm;
-    final Color endAccent = Color.lerp(accent, _accentCoral, 0.55) ??
-        _accentCoral;
+    final Color accent = deck != null ? _deckAccentColor(deck) : _accentWarm;
+    final Color endAccent =
+        Color.lerp(accent, _accentCoral, 0.55) ?? _accentCoral;
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: IgnorePointer(
@@ -2261,33 +2370,56 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final _ProgressSummary effectiveSummary = preview == null
         ? summary
         : _ProgressSummary(correct: preview.correct, total: preview.total);
-    final bool hasData = preview != null || summary.total > 0;
+    final bool hasData =
+        preview != null || summary.total >= _tierSnapshotMinimumTotal;
+    final bool hasTierData =
+        preview != null || summary.total >= _tierSnapshotMinimumTotal;
     final String percentText = hasData
         ? '${(effectiveSummary.percent * 100).toStringAsFixed(0)}%'
-        : l10n.statsNoData;
-    final _TierInfo? tier = preview?.tier ??
-        (hasData ? _tierInfoForPercent(effectiveSummary.percent, l10n) : null);
-    final bool isTierS = tier?.assetPath == _assetTierS;
-    final String mascotAsset = tier?.assetPath ?? _assetMascotte;
+        : '\u3046\u301c\u3093';
+    final _TierInfo? tier = hasTierData
+        ? (preview?.tier ?? _tierInfoForPercent(effectiveSummary.percent, l10n))
+        : null;
+    final _TierInfo? visualTier =
+        hasTierData ? tier : _tierInfoForPercent(_tierThresholdD, l10n);
+    final bool isTierS = hasTierData && tier?.assetPath == _assetTierS;
+    final bool isTierA = visualTier?.assetPath == _assetTierA;
+    final bool isTierB = visualTier?.assetPath == _assetTierB;
+    final String mascotAsset =
+        hasTierData && tier != null ? tier.assetPath : _assetMascotte;
     final theme = Theme.of(context);
     final accent = _deckAccentColor(deck);
-    final _PatternStyle patternStyle = _patternStyleForTier(tier);
-    final double patternOpacity = isTierS ? 0.65 : 0.45;
+    final _PatternStyle patternStyle = _patternStyleForTier(visualTier);
+    final double baseTintAmount =
+        isTierS ? 0.14 : ((isTierA || isTierB) ? 0.07 : 0.1);
+    final double gradStartTintAmount =
+        isTierS ? 0.28 : ((isTierA || isTierB) ? 0.14 : 0.2);
+    final double gradEndTintAmount =
+        isTierS ? 0.32 : ((isTierA || isTierB) ? 0.18 : 0.24);
+    final Color tierTint = patternStyle.glowColor ?? patternStyle.color;
     final Color cardBase =
-        isTierS ? const Color(0xFFFFF2FB) : _bgCardAlt;
-    final List<Color> cardGradient = isTierS
-        ? const [
-            Color(0xFFFFF7FD),
-            Color(0xFFFFE7F7),
-            Color(0xFFEAD8FF),
-          ]
-        : [_bgCardAlt, _bgCardAlt.withOpacity(0.9)];
+        Color.lerp(_bgCardAlt, tierTint, baseTintAmount) ?? _bgCardAlt;
+    final List<Color> cardGradient = <Color>[
+      Color.lerp(_bgCardAlt, tierTint, gradStartTintAmount) ?? _bgCardAlt,
+      Color.lerp(_bgDeep, tierTint, gradEndTintAmount) ?? _bgDeep,
+    ];
+    final double patternOpacity = isTierS ? 0.65 : 0.45;
+    final Color patternInk = isTierS
+        // Keep Tier S base pattern color stable and unmistakably non-highlight.
+        ? patternStyle.color
+        : patternStyle.color.withOpacity(patternOpacity);
+    final List<Color>? patternGradient = patternStyle.gradientColors
+        ?.map((color) => color.withOpacity(patternOpacity))
+        .toList();
+    final Color? patternGlow = isTierS
+        ? patternStyle.glowColor
+        : patternStyle.glowColor?.withOpacity(patternOpacity);
     final Color frameColor = isTierS
         ? const Color(0xFFFF7AD1).withOpacity(0.8)
         : accent.withOpacity(0.22);
     final TextStyle percentStyle = theme.textTheme.headlineMedium?.copyWith(
           fontWeight: FontWeight.w700,
-          color: isTierS ? Colors.black : (hasData ? Colors.white : theme.hintColor),
+          color: hasData ? Colors.white : theme.hintColor,
           shadows: isTierS
               ? [
                   const Shadow(
@@ -2303,7 +2435,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         ) ??
         TextStyle(
           fontWeight: FontWeight.w700,
-          color: isTierS ? Colors.black : (hasData ? Colors.white : theme.hintColor),
+          color: hasData ? Colors.white : theme.hintColor,
         );
     return InkWell(
       onTap: () => _openStatsPage(deck),
@@ -2341,13 +2473,26 @@ class _TrainerHomePageState extends State<TrainerHomePage>
               children: [
                 Positioned.fill(
                   child: IgnorePointer(
-                    child: CustomPaint(
-                      painter: _PepPatternPainter(
-                        color: patternStyle.color.withOpacity(patternOpacity),
-                        gradientColors: patternStyle.gradientColors
-                            ?.map((color) => color.withOpacity(patternOpacity))
-                            .toList(),
-                      ),
+                    child: AnimatedBuilder(
+                      animation: _proPulse,
+                      builder: (context, child) {
+                        final double bob =
+                            (_proPulse.value * 2 - 1) * _mascotBobAmplitude;
+                        return CustomPaint(
+                          painter: _PepPatternPainter(
+                            color: patternInk,
+                            gradientColors: patternGradient,
+                            glowColor: patternGlow,
+                            darkerEvery: patternStyle.darkerEvery,
+                            highlightEvery: patternStyle.highlightEvery,
+                            // Keep the "different" characters crisp; the base pattern is already
+                            // controlled by patternOpacity.
+                            highlightColor: patternStyle.highlightColor,
+                            highlightGlowColor: patternStyle.highlightGlowColor,
+                            verticalShift: -bob,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -2371,12 +2516,24 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                 Positioned.fill(
                   child: Align(
                     alignment: const Alignment(0, 0.32),
-                    child: Transform.scale(
-                      scale: 1.55,
-                      child: Image.asset(
-                        mascotAsset,
-                        fit: BoxFit.contain,
-                        alignment: Alignment.center,
+                    child: AnimatedBuilder(
+                      animation: _proPulse,
+                      builder: (context, child) {
+                        final double bob =
+                            (_proPulse.value * 2 - 1) * _mascotBobAmplitude;
+                        final double baseY = hasData ? 0 : 100;
+                        return Transform.translate(
+                          offset: Offset(0, baseY + bob),
+                          child: child,
+                        );
+                      },
+                      child: Transform.scale(
+                        scale: 1.55,
+                        child: Image.asset(
+                          mascotAsset,
+                          fit: BoxFit.contain,
+                          alignment: Alignment.center,
+                        ),
                       ),
                     ),
                   ),
@@ -2404,8 +2561,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                         effectiveSummary.total,
                       ),
                       style: theme.textTheme.bodySmall?.copyWith(
-                            color:
-                                isTierS ? Colors.black : Colors.white.withOpacity(0.85),
+                            color: Colors.white.withOpacity(0.9),
                             fontWeight: FontWeight.w700,
                             shadows: isTierS
                                 ? [
@@ -2421,12 +2577,27 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                             fontWeight: FontWeight.w700,
                           ),
                       strokeWidth: 2,
-                      strokeColor: isTierS
-                          ? Colors.white.withOpacity(0.7)
-                          : Colors.black.withOpacity(0.7),
+                      strokeColor: Colors.black.withOpacity(0.72),
                     ),
                   ),
-                if (tier != null)
+                if (!hasData)
+                  Positioned(
+                    left: 12,
+                    bottom: 10,
+                    child: Text(
+                      l10n.statsNoData,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.white.withOpacity(0.72),
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.2,
+                          ) ??
+                          const TextStyle(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                if (hasTierData && tier != null)
                   Positioned(
                     right: 10,
                     bottom: 10,
@@ -2446,118 +2617,111 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final theme = Theme.of(context);
     final disabledColor = theme.disabledColor;
     final l10n = AppLocalizations.of(context)!;
-    return _decks
-        .map(
-          (deck) {
-            final bool isAvailable = _isDeckAvailable(deck);
-            final bool showBadges = showProBadges && !_isProUser;
-            final bool showPro = showBadges && !isAvailable;
-            final bool showFree = showBadges && isAvailable;
-            final deckLabel = _deckLabel(deck, l10n);
-            final Color proBadgeColor =
-                isAvailable ? _proGold : disabledColor;
-            final Color accentBase = _deckAccentColor(deck);
-            final bool isDimmed = !isAvailable;
-            final Color accent = isDimmed
-                ? theme.hintColor.withOpacity(0.4)
-                : accentBase;
-            final Color labelColor =
-                isAvailable ? Colors.white : disabledColor;
-            final Color tileColor = isDimmed
-                ? _bgCardAlt.withOpacity(0.55)
-                : _bgCardAlt;
-            final Color borderColor = isDimmed
-                ? Colors.white.withOpacity(0.08)
-                : accentBase.withOpacity(0.22);
-            return DropdownMenuItem<PracticeDeck>(
-              value: deck,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                margin: const EdgeInsets.symmetric(vertical: 4),
-                decoration: BoxDecoration(
-                  color: tileColor,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: borderColor,
+    return _decks.map(
+      (deck) {
+        final bool isAvailable = _isDeckAvailable(deck);
+        final bool showBadges = showProBadges && !_isProUser;
+        final bool showPro = showBadges && !isAvailable;
+        final bool showFree = showBadges && isAvailable;
+        final deckLabel = _deckLabel(deck, l10n);
+        final Color proBadgeColor = isAvailable ? _proGold : disabledColor;
+        final Color accentBase = _deckAccentColor(deck);
+        final bool isDimmed = !isAvailable;
+        final Color accent =
+            isDimmed ? theme.hintColor.withOpacity(0.4) : accentBase;
+        final Color labelColor = isAvailable ? Colors.white : disabledColor;
+        final Color tileColor =
+            isDimmed ? _bgCardAlt.withOpacity(0.55) : _bgCardAlt;
+        final Color borderColor = isDimmed
+            ? Colors.white.withOpacity(0.08)
+            : accentBase.withOpacity(0.22);
+        return DropdownMenuItem<PracticeDeck>(
+          value: deck,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            decoration: BoxDecoration(
+              color: tileColor,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: borderColor,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: accent,
+                    borderRadius: BorderRadius.circular(999),
+                    boxShadow: isDimmed
+                        ? null
+                        : [
+                            BoxShadow(
+                              color: accent.withOpacity(0.35),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 26,
-                      decoration: BoxDecoration(
-                        color: accent,
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: isDimmed
-                            ? null
-                            : [
-                                BoxShadow(
-                                  color: accent.withOpacity(0.35),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                      ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    deckLabel,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: labelColor,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        deckLabel,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: labelColor,
+                  ),
+                ),
+                if (showFree)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.check_circle,
+                        color: _accentCool,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        l10n.badgeFree,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: _accentCool,
                           fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
                         ),
                       ),
-                    ),
-                    if (showFree)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.check_circle,
-                            color: _accentCool,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            l10n.badgeFree,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                                  color: _accentCool,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.5,
-                                ),
-                          ),
-                        ],
+                    ],
+                  ),
+                if (showPro)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.star,
+                        color: proBadgeColor,
+                        size: 16,
                       ),
-                    if (showPro)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.star,
-                            color: proBadgeColor,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            l10n.badgePro,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                                  color: proBadgeColor,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.5,
-                                ),
-                          ),
-                        ],
+                      const SizedBox(width: 4),
+                      Text(
+                        l10n.badgePro,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: proBadgeColor,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
                       ),
-                  ],
-                ),
-              ),
-            );
-          },
-        )
-        .toList();
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    ).toList();
   }
 
   void _selectDeck(PracticeDeck deck) {
@@ -2592,9 +2756,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final bool showPromptReading = _shouldShowReading(prompt, promptReading);
 
     if (!hasQuestion) {
-      final subtitle = deck == null
-          ? l10n.selectRuleToBegin
-          : l10n.preparingFirstQuestion;
+      final subtitle =
+          deck == null ? l10n.selectRuleToBegin : l10n.preparingFirstQuestion;
       return _buildPlaceholderCard(header, subtitle);
     }
 
@@ -2615,8 +2778,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
           child: Card(
             child: Container(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -2841,8 +3003,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     if (current.answerVisible) {
       return;
     }
-    _questionHistory[_historyIndex] =
-        current.copyWith(answerVisible: true);
+    _questionHistory[_historyIndex] = current.copyWith(answerVisible: true);
   }
 
   Widget _buildProgressRow() {
@@ -2993,7 +3154,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         final l10n = AppLocalizations.of(context)!;
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
           child: Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
@@ -3017,7 +3179,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.auto_awesome, color: Colors.black, size: 20),
+                    const Icon(Icons.auto_awesome,
+                        color: Colors.black, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       l10n.tutorialTitle,
@@ -3415,24 +3578,13 @@ class _StatsPageState extends State<_StatsPage> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final _TierPreview? preview = _tierPreviewOverrideInfo(l10n);
-    final bool hasAnyData =
-        preview != null || widget.entries.values.any((entry) => entry.total > 0);
-    if (!hasAnyData) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.statsTitle),
-        ),
-        body: const SizedBox.shrink(),
-      );
-    }
     final today = _stripTime(DateTime.now());
     final int rangeDays = _range == _StatsRange.week ? 7 : 30;
     final currentStart = today.subtract(Duration(days: rangeDays - 1));
     final previousEnd = currentStart.subtract(const Duration(days: 1));
     final previousStart = previousEnd.subtract(Duration(days: rangeDays - 1));
 
-    final currentSummary =
-        _summarizeRange(widget.entries, currentStart, today);
+    final currentSummary = _summarizeRange(widget.entries, currentStart, today);
     final _ProgressSummary effectiveSummary = preview == null
         ? currentSummary
         : _ProgressSummary(correct: preview.correct, total: preview.total);
@@ -3442,17 +3594,73 @@ class _StatsPageState extends State<_StatsPage> {
     final points = _buildSeries(widget.entries, currentStart, rangeDays);
     final bool hasSeriesData = points.any((point) => point.percent != null);
     final bool hasCurrent = preview != null || currentSummary.total > 0;
+    final bool hasTierData =
+        preview != null || currentSummary.total >= _tierStatsMinimumTotal;
     final String percentText = hasCurrent
         ? '${(effectiveSummary.percent * 100).toStringAsFixed(0)}%'
         : l10n.statsNoData;
-    final _TierInfo? tier = preview?.tier ??
-        (hasCurrent ? _tierInfoForPercent(effectiveSummary.percent, l10n) : null);
-    final String mascotAsset = tier?.assetPath ?? _assetMascotte;
+    final _TierInfo? tier = hasTierData
+        ? (preview?.tier ?? _tierInfoForPercent(effectiveSummary.percent, l10n))
+        : null;
+    final String mascotAsset =
+        hasTierData && tier != null ? tier.assetPath : _assetMascotte;
+    final _TierInfo? visualTier =
+        hasTierData ? tier : _tierInfoForPercent(_tierThresholdD, l10n);
+    final bool isTierS = hasTierData && tier?.assetPath == _assetTierS;
+    final bool isTierA = visualTier?.assetPath == _assetTierA;
+    final bool isTierB = visualTier?.assetPath == _assetTierB;
+    final _PatternStyle statsHeaderPattern = _patternStyleForTier(visualTier);
+    final Color statsHeaderTint =
+        statsHeaderPattern.glowColor ?? statsHeaderPattern.color;
+    final double statsHeaderStartTintAmount =
+        isTierS ? 0.24 : ((isTierA || isTierB) ? 0.12 : 0.18);
+    final double statsHeaderEndTintAmount =
+        isTierS ? 0.3 : ((isTierA || isTierB) ? 0.16 : 0.22);
+    final Color statsHeaderFrameColor = isTierS
+        ? const Color(0xFFFF7AD1).withOpacity(0.8)
+        : widget.accentColor.withOpacity(0.28);
+    final List<Color> statsHeaderGradient = <Color>[
+      Color.lerp(_bgCard, statsHeaderTint, statsHeaderStartTintAmount) ??
+          _bgCard,
+      Color.lerp(_bgCardAlt, statsHeaderTint, statsHeaderEndTintAmount) ??
+          _bgCardAlt,
+    ];
+    final TextStyle statsPercentStyle = theme.textTheme.displaySmall?.copyWith(
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.6,
+          color: Colors.white,
+          shadows: isTierS
+              ? [
+                  const Shadow(
+                    color: Color(0xFFFF5CD6),
+                    blurRadius: 12,
+                  ),
+                  const Shadow(
+                    color: Color(0xFF8A4CFF),
+                    blurRadius: 18,
+                  ),
+                ]
+              : null,
+        ) ??
+        const TextStyle(
+          fontSize: 44,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.6,
+          color: Colors.white,
+        );
+    final TextStyle statsMetaStyle = theme.textTheme.bodySmall?.copyWith(
+          color: hasCurrent ? Colors.white.withOpacity(0.9) : Colors.white70,
+          fontWeight: FontWeight.w700,
+        ) ??
+        TextStyle(
+          color: hasCurrent ? Colors.white.withOpacity(0.9) : Colors.white70,
+          fontWeight: FontWeight.w700,
+        );
 
     final DateFormat dateFormat =
         DateFormat.MMMd(Localizations.localeOf(context).toString());
     final String rangeLabel =
-        '${dateFormat.format(currentStart)} • ${dateFormat.format(today)}';
+        '${dateFormat.format(currentStart)} - ${dateFormat.format(today)}';
 
     return Scaffold(
       appBar: AppBar(
@@ -3469,52 +3677,54 @@ class _StatsPageState extends State<_StatsPage> {
           ),
           const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: _bgCard,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: widget.accentColor.withOpacity(0.25),
+                color: statsHeaderFrameColor,
               ),
               gradient: LinearGradient(
-                colors: [
-                  _bgCard,
-                  widget.accentColor.withOpacity(0.08),
-                ],
+                colors: statsHeaderGradient,
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
+              boxShadow: isTierS
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFFFF5CD6).withOpacity(0.36),
+                        blurRadius: 22,
+                        offset: const Offset(0, 8),
+                      ),
+                    ]
+                  : null,
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        percentText,
-                        style: theme.textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.6,
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          percentText,
+                          style: statsPercentStyle,
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        hasCurrent
-                      ? l10n.statsCorrectOfTotal(
-                          effectiveSummary.correct,
-                          effectiveSummary.total,
-                        )
-                            : l10n.statsNoData,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.hintColor,
+                        const SizedBox(height: 6),
+                        Text(
+                          hasCurrent
+                              ? l10n.statsCorrectOfTotal(
+                                  effectiveSummary.correct,
+                                  effectiveSummary.total,
+                                )
+                              : l10n.statsNoData,
+                          style: statsMetaStyle,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                if (tier != null) _TierBadge(tier: tier),
-              ],
+                  if (hasTierData && tier != null) _TierBadge(tier: tier),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -3814,7 +4024,9 @@ class _ProgressChartPainter extends CustomPainter {
       final double? percent = points[i].percent;
       final double x = step * i;
       if (percent == null) {
-        if (segmentPath != null && segmentStartX != null && segmentEndX != null) {
+        if (segmentPath != null &&
+            segmentStartX != null &&
+            segmentEndX != null) {
           drawSegment(segmentPath, segmentStartX, segmentEndX);
         }
         segmentPath = null;
@@ -3853,54 +4065,238 @@ class _PepPatternPainter extends CustomPainter {
   const _PepPatternPainter({
     required this.color,
     this.gradientColors,
+    this.glowColor,
+    this.darkerEvery = 0,
+    this.highlightEvery = 0,
+    this.highlightColor,
+    this.highlightGlowColor,
+    this.verticalShift = 0,
   });
 
   final Color color;
   final List<Color>? gradientColors;
+  final Color? glowColor;
+  final int darkerEvery;
+  final int highlightEvery;
+  final Color? highlightColor;
+  final Color? highlightGlowColor;
+  final double verticalShift;
 
   @override
   void paint(Canvas canvas, Size size) {
-    const String label = 'ペラペラ';
+    const String label = '\u30da\u30e9\u30da\u30e9';
+
+    final bool useFlatColors = gradientColors == null;
+    // Requested behavior: no special glyphs, uniform glow on all glyphs.
+    final int effectiveDarkerEvery = 0;
+    final int effectiveHighlightEvery = 0;
+    final Color? effectiveHighlightColor = null;
+    final Color? baseGlow = useFlatColors ? color : null;
+    final Color? effectiveHighlightGlow = null;
+
+    final Color darkerColor = Color.lerp(color, Colors.black, 0.18) ?? color;
+    final Color? darkerGlow = baseGlow == null
+        ? null
+        : (Color.lerp(baseGlow, Colors.black, 0.12) ?? baseGlow);
+
     final TextStyle baseStyle = TextStyle(
       color: color,
-      fontSize: 20,
+      fontSize: 22,
       fontWeight: FontWeight.w700,
       letterSpacing: 0.6,
-      shadows: [
-        Shadow(color: color.withOpacity(0.65), blurRadius: 10),
-        Shadow(color: color.withOpacity(0.35), blurRadius: 18),
-      ],
+      shadows: baseGlow == null
+          ? null
+          : <Shadow>[
+              Shadow(color: baseGlow.withValues(alpha: 0.46), blurRadius: 12),
+              Shadow(color: baseGlow.withValues(alpha: 0.26), blurRadius: 22),
+              Shadow(color: baseGlow.withValues(alpha: 0.14), blurRadius: 32),
+            ],
     );
+
+    final TextStyle darkerStyle = baseStyle.copyWith(
+      color: darkerColor,
+      shadows: darkerGlow == null
+          ? null
+          : <Shadow>[
+              Shadow(color: darkerGlow.withOpacity(0.2), blurRadius: 8),
+              Shadow(color: darkerGlow.withOpacity(0.1), blurRadius: 14),
+            ],
+    );
+    final List<Shadow>? highlightGlowShadows = effectiveHighlightGlow == null
+        ? null
+        : <Shadow>[
+            Shadow(
+              color: effectiveHighlightGlow.withValues(alpha: 0.92),
+              blurRadius: 5,
+            ),
+            Shadow(
+              color: effectiveHighlightGlow.withValues(alpha: 0.48),
+              blurRadius: 8,
+            ),
+          ];
+
+    final TextStyle highlightStyle = effectiveHighlightColor == null
+        ? baseStyle
+        : baseStyle.copyWith(
+            color: effectiveHighlightColor,
+            shadows: highlightGlowShadows,
+          );
+    final TextStyle highlightFillStyle = effectiveHighlightColor == null
+        ? baseStyle
+        : baseStyle.copyWith(
+            color: effectiveHighlightColor,
+            shadows: const <Shadow>[],
+          );
+    final TextStyle highlightGlowStyle = effectiveHighlightGlow == null
+        ? baseStyle.copyWith(shadows: const <Shadow>[])
+        : baseStyle.copyWith(
+            color: effectiveHighlightGlow.withValues(alpha: 0.2),
+            shadows: highlightGlowShadows,
+          );
+    final TextStyle transparentStyle = baseStyle.copyWith(
+      color: Colors.transparent,
+      shadows: const <Shadow>[],
+    );
+    final bool splitHighlightGlow = useFlatColors &&
+        effectiveHighlightEvery > 0 &&
+        effectiveHighlightColor != null &&
+        effectiveHighlightGlow != null;
+
     final TextPainter measurePainter = TextPainter(
       text: TextSpan(text: label, style: baseStyle),
       textDirection: ui.TextDirection.ltr,
     )..layout();
 
-    final int repeatCount =
-        (size.width / measurePainter.width).ceil() + 4;
-    final String rowText = List<String>.filled(repeatCount, label).join();
+    final int repeatCount = (size.width / measurePainter.width).ceil() + 4;
     final double rowHeight = measurePainter.height + 6;
+
     int rowIndex = 0;
     for (double y = -rowHeight; y < size.height + rowHeight; y += rowHeight) {
       final double xJitter = (rowIndex % 4) * 8 - 10;
       final double yJitter = (rowIndex % 3) * 2 - 2;
+
       final TextStyle rowStyle;
-      if (gradientColors == null) {
+      final TextStyle rowDarkerStyle;
+      final TextStyle rowHighlightStyle;
+      final TextStyle rowHighlightFillStyle;
+      final TextStyle rowHighlightGlowStyle;
+      final TextStyle rowTransparentStyle;
+
+      if (useFlatColors) {
         rowStyle = baseStyle;
+        rowDarkerStyle = darkerStyle;
+        rowHighlightStyle = highlightStyle;
+        rowHighlightFillStyle = highlightFillStyle;
+        rowHighlightGlowStyle = highlightGlowStyle;
+        rowTransparentStyle = transparentStyle;
       } else {
         final Paint paint = Paint()
           ..shader = LinearGradient(
             colors: gradientColors!,
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
-          ).createShader(Rect.fromLTWH(0, y, size.width, rowHeight));
-        rowStyle = baseStyle.copyWith(foreground: paint);
+          ).createShader(
+            Rect.fromLTWH(0, y + verticalShift, size.width, rowHeight),
+          );
+        rowStyle = TextStyle(
+          foreground: paint,
+          fontSize: baseStyle.fontSize,
+          fontWeight: baseStyle.fontWeight,
+          letterSpacing: baseStyle.letterSpacing,
+          shadows: baseStyle.shadows,
+        );
+        rowDarkerStyle = rowStyle;
+        rowHighlightStyle = rowStyle;
+        rowHighlightFillStyle = rowStyle;
+        rowHighlightGlowStyle = rowStyle;
+        rowTransparentStyle = rowStyle;
       }
+
+      final Offset rowOffset = Offset(
+        -8 + xJitter,
+        y + yJitter + verticalShift,
+      );
+      late final InlineSpan rowSpan;
+
+      if (effectiveDarkerEvery <= 0 &&
+          effectiveHighlightEvery <= 0 &&
+          !useFlatColors) {
+        final String rowText = List<String>.filled(repeatCount, label).join();
+        rowSpan = TextSpan(text: rowText, style: rowStyle);
+      } else {
+        final String rowText = List<String>.filled(repeatCount, label).join();
+        if (splitHighlightGlow) {
+          final List<InlineSpan> glowChildren = <InlineSpan>[];
+          final List<InlineSpan> fillChildren = <InlineSpan>[];
+          int charIndex = 0;
+          for (final String symbol in rowText.characters) {
+            final int styledIndex = charIndex + rowIndex;
+            final bool isHighlight = effectiveHighlightEvery > 0 &&
+                effectiveHighlightColor != null &&
+                styledIndex % effectiveHighlightEvery == 0;
+            final bool isDarker = !isHighlight &&
+                effectiveDarkerEvery > 0 &&
+                styledIndex % effectiveDarkerEvery == 0;
+            glowChildren.add(
+              TextSpan(
+                text: symbol,
+                style:
+                    isHighlight ? rowHighlightGlowStyle : rowTransparentStyle,
+              ),
+            );
+            fillChildren.add(
+              TextSpan(
+                text: symbol,
+                style: isHighlight
+                    ? rowHighlightFillStyle
+                    : (isDarker ? rowDarkerStyle : rowStyle),
+              ),
+            );
+            charIndex++;
+          }
+          final TextPainter glowPainter = TextPainter(
+            text: TextSpan(children: glowChildren),
+            textDirection: ui.TextDirection.ltr,
+          )..layout();
+          final TextPainter fillPainter = TextPainter(
+            text: TextSpan(children: fillChildren),
+            textDirection: ui.TextDirection.ltr,
+          )..layout();
+          glowPainter.paint(canvas, rowOffset);
+          fillPainter.paint(canvas, rowOffset);
+          rowIndex++;
+          continue;
+        }
+
+        final List<InlineSpan> children = <InlineSpan>[];
+        int charIndex = 0;
+        for (final String symbol in rowText.characters) {
+          final int styledIndex = charIndex + rowIndex;
+          final bool isHighlight = effectiveHighlightEvery > 0 &&
+              effectiveHighlightColor != null &&
+              styledIndex % effectiveHighlightEvery == 0;
+          final bool isDarker = !isHighlight &&
+              effectiveDarkerEvery > 0 &&
+              styledIndex % effectiveDarkerEvery == 0;
+          final TextStyle style = isHighlight
+              ? rowHighlightStyle
+              : (isDarker ? rowDarkerStyle : rowStyle);
+          children.add(
+            TextSpan(
+              text: symbol,
+              style: style,
+            ),
+          );
+          charIndex++;
+        }
+        rowSpan = TextSpan(children: children);
+      }
+
       final TextPainter rowPainter = TextPainter(
-        text: TextSpan(text: rowText, style: rowStyle),
+        text: rowSpan,
         textDirection: ui.TextDirection.ltr,
       )..layout();
-      rowPainter.paint(canvas, Offset(-8 + xJitter, y + yJitter));
+      rowPainter.paint(canvas, rowOffset);
       rowIndex++;
     }
   }
@@ -3908,7 +4304,13 @@ class _PepPatternPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _PepPatternPainter oldDelegate) {
     return oldDelegate.color != color ||
-        oldDelegate.gradientColors != gradientColors;
+        oldDelegate.gradientColors != gradientColors ||
+        oldDelegate.glowColor != glowColor ||
+        oldDelegate.darkerEvery != darkerEvery ||
+        oldDelegate.highlightEvery != highlightEvery ||
+        oldDelegate.highlightColor != highlightColor ||
+        oldDelegate.highlightGlowColor != highlightGlowColor ||
+        oldDelegate.verticalShift != verticalShift;
   }
 }
 
@@ -4357,8 +4759,7 @@ class _CustomDeckPageState extends State<_CustomDeckPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final option in options)
-              _buildOptionTile(theme, option),
+            for (final option in options) _buildOptionTile(theme, option),
           ],
         ),
       ),
@@ -4367,11 +4768,9 @@ class _CustomDeckPageState extends State<_CustomDeckPage> {
 
   Widget _buildOptionTile(ThemeData theme, _CustomDeckOption option) {
     final bool selected = _selectedIds.contains(option.id);
-    final Color accent = option.kind == _CustomOptionKind.mode
-        ? _accentWarm
-        : _accentCool;
-    final Color barColor =
-        selected ? accent : accent.withOpacity(0.3);
+    final Color accent =
+        option.kind == _CustomOptionKind.mode ? _accentWarm : _accentCool;
+    final Color barColor = selected ? accent : accent.withOpacity(0.3);
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () => _toggleOption(option.id, !selected),
@@ -4389,8 +4788,7 @@ class _CustomDeckPageState extends State<_CustomDeckPage> {
           children: [
             Checkbox(
               value: selected,
-              onChanged: (value) =>
-                  _toggleOption(option.id, value ?? false),
+              onChanged: (value) => _toggleOption(option.id, value ?? false),
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               visualDensity: VisualDensity.compact,
             ),
@@ -4479,7 +4877,7 @@ class ProUpsellPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final String priceText = '$priceLabel • $oneTimeLabel';
+    final String priceText = '$priceLabel - $oneTimeLabel';
     final bool canBuy = storeReady && !purchasePending && !isProUser;
 
     return Scaffold(
@@ -4710,9 +5108,3 @@ class ProUpsellPage extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
-

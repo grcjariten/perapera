@@ -13,6 +13,6 @@ void main() {
   testWidgets('Trainer app shows home title', (WidgetTester tester) async {
     await tester.pumpWidget(const TrainerApp());
 
-    expect(find.text('perapera'), findsOneWidget);
+    expect(find.byType(TrainerHomePage), findsOneWidget);
   });
 }
