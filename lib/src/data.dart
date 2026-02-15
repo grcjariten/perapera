@@ -1,4 +1,4 @@
-﻿import 'dart:math';
+import 'dart:math';
 
 enum TrainerMode {
   masu('forma ~ます'),
@@ -75,7 +75,8 @@ class VerbEntry {
           '（普通形＋かもしれません）',
         );
       case TrainerMode.mix:
-        throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la coniugazione.');
+        throw ArgumentError(
+            'TrainerMode.mix va risolto prima di chiedere la coniugazione.');
     }
   }
 
@@ -146,10 +147,8 @@ class VerbEntry {
   String _masuSurface() {
     switch (verbClass) {
       case VerbClass.godan:
-        final String stem =
-            dictionary.substring(0, dictionary.length - 1);
-        final String ending =
-            dictionary.substring(dictionary.length - 1);
+        final String stem = dictionary.substring(0, dictionary.length - 1);
+        final String ending = dictionary.substring(dictionary.length - 1);
         return '$stem${_godanIMap[ending] ?? ''}$_masuSuffix';
       case VerbClass.ichidan:
         return '${dictionary.substring(0, dictionary.length - 1)}$_masuSuffix';
@@ -158,8 +157,7 @@ class VerbEntry {
       case VerbClass.kuru:
         return '${dictionary.substring(0, dictionary.length - 1)}$_masuSuffix';
       case VerbClass.suruCompound:
-        final String prefix =
-            dictionary.substring(0, dictionary.length - 2);
+        final String prefix = dictionary.substring(0, dictionary.length - 2);
         return '$prefix$_suruMasu';
     }
   }
@@ -181,7 +179,8 @@ class VerbEntry {
 
   String _readingForGodan(TrainerMode mode) {
     if (mode == TrainerMode.mix) {
-      throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+      throw ArgumentError(
+          'TrainerMode.mix va risolto prima di chiedere la lettura.');
     }
     if (mode == TrainerMode.kamo) {
       return '$readingかもしれません';
@@ -207,13 +206,15 @@ class VerbEntry {
         return '$stem${_godanPotential[ending] ?? ''}る';
       case TrainerMode.mix:
       case TrainerMode.kamo:
-        throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+        throw ArgumentError(
+            'TrainerMode.mix va risolto prima di chiedere la lettura.');
     }
   }
 
   String _readingForIchidan(TrainerMode mode) {
     if (mode == TrainerMode.mix) {
-      throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+      throw ArgumentError(
+          'TrainerMode.mix va risolto prima di chiedere la lettura.');
     }
     if (mode == TrainerMode.kamo) {
       return '$readingかもしれません';
@@ -232,13 +233,15 @@ class VerbEntry {
         return '$stemられる';
       case TrainerMode.mix:
       case TrainerMode.kamo:
-        throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+        throw ArgumentError(
+            'TrainerMode.mix va risolto prima di chiedere la lettura.');
     }
   }
 
   String _readingForSuru(TrainerMode mode, String prefix) {
     if (mode == TrainerMode.mix) {
-      throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+      throw ArgumentError(
+          'TrainerMode.mix va risolto prima di chiedere la lettura.');
     }
     switch (mode) {
       case TrainerMode.te:
@@ -254,13 +257,15 @@ class VerbEntry {
       case TrainerMode.kamo:
         return '${prefix}するかもしれません';
       case TrainerMode.mix:
-        throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+        throw ArgumentError(
+            'TrainerMode.mix va risolto prima di chiedere la lettura.');
     }
   }
 
   String _readingForKuru(TrainerMode mode) {
     if (mode == TrainerMode.mix) {
-      throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+      throw ArgumentError(
+          'TrainerMode.mix va risolto prima di chiedere la lettura.');
     }
     switch (mode) {
       case TrainerMode.te:
@@ -276,7 +281,8 @@ class VerbEntry {
       case TrainerMode.kamo:
         return 'くるかもしれません';
       case TrainerMode.mix:
-        throw ArgumentError('TrainerMode.mix va risolto prima di chiedere la lettura.');
+        throw ArgumentError(
+            'TrainerMode.mix va risolto prima di chiedere la lettura.');
     }
   }
 }
@@ -932,8 +938,162 @@ const List<VerbEntry> verbList = <VerbEntry>[
   ...premiumVerbList,
 ];
 
+const Map<String, Map<String, String>> _verbMeaningByDictionary =
+    <String, Map<String, String>>{
+  'あげる': {'en': 'give', 'it': 'dare', 'fr': 'donner', 'es': 'dar'},
+  'する': {'en': 'do', 'it': 'fare', 'fr': 'faire', 'es': 'hacer'},
+  'つける': {
+    'en': 'turn on',
+    'it': 'accendere',
+    'fr': 'allumer',
+    'es': 'encender'
+  },
+  'もらう': {'en': 'receive', 'it': 'ricevere', 'fr': 'recevoir', 'es': 'recibir'},
+  '乗る': {'en': 'ride', 'it': 'salire', 'fr': 'monter', 'es': 'subir'},
+  '休む': {'en': 'rest', 'it': 'riposare', 'fr': 'se reposer', 'es': 'descansar'},
+  '会う': {
+    'en': 'meet',
+    'it': 'incontrare',
+    'fr': 'rencontrer',
+    'es': 'encontrarse'
+  },
+  '住む': {'en': 'live', 'it': 'vivere', 'fr': 'habiter', 'es': 'vivir'},
+  '作る': {'en': 'make', 'it': 'fare', 'fr': 'fabriquer', 'es': 'hacer'},
+  '使う': {'en': 'use', 'it': 'usare', 'fr': 'utiliser', 'es': 'usar'},
+  '借りる': {
+    'en': 'borrow',
+    'it': 'prendere in prestito',
+    'fr': 'emprunter',
+    'es': 'pedir prestado'
+  },
+  '働く': {'en': 'work', 'it': 'lavorare', 'fr': 'travailler', 'es': 'trabajar'},
+  '入る': {'en': 'enter', 'it': 'entrare', 'fr': 'entrer', 'es': 'entrar'},
+  '出かける': {'en': 'go out', 'it': 'uscire', 'fr': 'sortir', 'es': 'salir'},
+  '出る': {'en': 'leave', 'it': 'uscire', 'fr': 'sortir', 'es': 'salir'},
+  '切る': {'en': 'cut', 'it': 'tagliare', 'fr': 'couper', 'es': 'cortar'},
+  '勉強する': {'en': 'study', 'it': 'studiare', 'fr': 'etudier', 'es': 'estudiar'},
+  '取る': {'en': 'take', 'it': 'prendere', 'fr': 'prendre', 'es': 'tomar'},
+  '受ける': {'en': 'take', 'it': 'prendere', 'fr': 'prendre', 'es': 'tomar'},
+  '呼ぶ': {'en': 'call', 'it': 'chiamare', 'fr': 'appeler', 'es': 'llamar'},
+  '売る': {'en': 'sell', 'it': 'vendere', 'fr': 'vendre', 'es': 'vender'},
+  '始める': {'en': 'start', 'it': 'iniziare', 'fr': 'commencer', 'es': 'empezar'},
+  '寝る': {'en': 'sleep', 'it': 'dormire', 'fr': 'dormir', 'es': 'dormir'},
+  '帰る': {
+    'en': 'go home',
+    'it': 'tornare',
+    'fr': 'rentrer',
+    'es': 'volver a casa'
+  },
+  '待つ': {'en': 'wait', 'it': 'aspettare', 'fr': 'attendre', 'es': 'esperar'},
+  '忘れる': {
+    'en': 'forget',
+    'it': 'dimenticare',
+    'fr': 'oublier',
+    'es': 'olvidar'
+  },
+  '急ぐ': {
+    'en': 'hurry',
+    'it': 'sbrigarsi',
+    'fr': 'se depecher',
+    'es': 'darse prisa'
+  },
+  '打つ': {'en': 'hit', 'it': 'colpire', 'fr': 'frapper', 'es': 'golpear'},
+  '払う': {'en': 'pay', 'it': 'pagare', 'fr': 'payer', 'es': 'pagar'},
+  '拾う': {
+    'en': 'pick up',
+    'it': 'raccogliere',
+    'fr': 'ramasser',
+    'es': 'recoger'
+  },
+  '持つ': {'en': 'hold', 'it': 'tenere', 'fr': 'tenir', 'es': 'sostener'},
+  '捨てる': {'en': 'throw away', 'it': 'buttare', 'fr': 'jeter', 'es': 'tirar'},
+  '探す': {'en': 'look for', 'it': 'cercare', 'fr': 'chercher', 'es': 'buscar'},
+  '教える': {'en': 'teach', 'it': 'insegnare', 'fr': 'enseigner', 'es': 'ensenar'},
+  '書く': {'en': 'write', 'it': 'scrivere', 'fr': 'ecrire', 'es': 'escribir'},
+  '来る': {'en': 'come', 'it': 'venire', 'fr': 'venir', 'es': 'venir'},
+  '歌う': {'en': 'sing', 'it': 'cantare', 'fr': 'chanter', 'es': 'cantar'},
+  '歩く': {'en': 'walk', 'it': 'camminare', 'fr': 'marcher', 'es': 'caminar'},
+  '死ぬ': {'en': 'die', 'it': 'morire', 'fr': 'mourir', 'es': 'morir'},
+  '決める': {'en': 'decide', 'it': 'decidere', 'fr': 'decider', 'es': 'decidir'},
+  '泳ぐ': {'en': 'swim', 'it': 'nuotare', 'fr': 'nager', 'es': 'nadar'},
+  '浴びる': {
+    'en': 'shower',
+    'it': 'fare la doccia',
+    'fr': 'se doucher',
+    'es': 'ducharse'
+  },
+  '消す': {'en': 'turn off', 'it': 'spegnere', 'fr': 'eteindre', 'es': 'apagar'},
+  '知る': {'en': 'know', 'it': 'sapere', 'fr': 'savoir', 'es': 'saber'},
+  '立つ': {
+    'en': 'stand',
+    'it': 'alzarsi',
+    'fr': 'se tenir debout',
+    'es': 'ponerse de pie'
+  },
+  '続ける': {
+    'en': 'continue',
+    'it': 'continuare',
+    'fr': 'continuer',
+    'es': 'continuar'
+  },
+  '習う': {'en': 'learn', 'it': 'imparare', 'fr': 'apprendre', 'es': 'aprender'},
+  '聞く': {'en': 'listen', 'it': 'ascoltare', 'fr': 'ecouter', 'es': 'escuchar'},
+  '脱ぐ': {
+    'en': 'take off',
+    'it': 'togliersi',
+    'fr': 'enlever',
+    'es': 'quitarse'
+  },
+  '行く': {'en': 'go', 'it': 'andare', 'fr': 'aller', 'es': 'ir'},
+  '見る': {'en': 'see', 'it': 'vedere', 'fr': 'voir', 'es': 'ver'},
+  '覚える': {
+    'en': 'remember',
+    'it': 'ricordare',
+    'fr': 'memoriser',
+    'es': 'recordar'
+  },
+  '話す': {'en': 'speak', 'it': 'parlare', 'fr': 'parler', 'es': 'hablar'},
+  '読む': {'en': 'read', 'it': 'leggere', 'fr': 'lire', 'es': 'leer'},
+  '買う': {'en': 'buy', 'it': 'comprare', 'fr': 'acheter', 'es': 'comprar'},
+  '走る': {'en': 'run', 'it': 'correre', 'fr': 'courir', 'es': 'correr'},
+  '起きる': {
+    'en': 'wake up',
+    'it': 'svegliarsi',
+    'fr': 'se reveiller',
+    'es': 'despertarse'
+  },
+  '迎える': {
+    'en': 'pick up',
+    'it': 'andare a prendere',
+    'fr': 'aller chercher',
+    'es': 'ir a recoger'
+  },
+  '返す': {'en': 'return', 'it': 'restituire', 'fr': 'rendre', 'es': 'devolver'},
+  '送る': {'en': 'send', 'it': 'inviare', 'fr': 'envoyer', 'es': 'enviar'},
+  '遊ぶ': {'en': 'play', 'it': 'giocare', 'fr': 'jouer', 'es': 'jugar'},
+  '運ぶ': {
+    'en': 'carry',
+    'it': 'trasportare',
+    'fr': 'transporter',
+    'es': 'llevar'
+  },
+  '選ぶ': {'en': 'choose', 'it': 'scegliere', 'fr': 'choisir', 'es': 'elegir'},
+  '閉める': {'en': 'close', 'it': 'chiudere', 'fr': 'fermer', 'es': 'cerrar'},
+  '開ける': {'en': 'open', 'it': 'aprire', 'fr': 'ouvrir', 'es': 'abrir'},
+  '飛ぶ': {'en': 'fly', 'it': 'volare', 'fr': 'voler', 'es': 'volar'},
+  '食べる': {'en': 'eat', 'it': 'mangiare', 'fr': 'manger', 'es': 'comer'},
+  '飲む': {'en': 'drink', 'it': 'bere', 'fr': 'boire', 'es': 'beber'},
+};
 
+String localizedVerbMeaning(VerbEntry verb, String languageCode) {
+  final Map<String, String>? meanings =
+      _verbMeaningByDictionary[verb.dictionary];
+  if (meanings == null || meanings.isEmpty) {
+    return '';
+  }
+  return meanings[languageCode] ?? meanings['en'] ?? '';
+}
 
-
-
-
+String englishVerbMeaning(VerbEntry verb) {
+  return localizedVerbMeaning(verb, 'en');
+}

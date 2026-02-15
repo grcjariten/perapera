@@ -764,51 +764,51 @@ _TierInfo _tierInfoForPercent(double percent, AppLocalizations l10n) {
 }
 
 const Map<String, String> _godanIMap = <String, String>{
-  'ã†': 'ã„',
-  'ã': 'ã',
-  'ã': 'ãŽ',
-  'ã™': 'ã—',
-  'ã¤': 'ã¡',
-  'ã¬': 'ã«',
-  'ã¶': 'ã³',
-  'ã‚€': 'ã¿',
-  'ã‚‹': 'ã‚Š',
+  '\u3046': '\u3044',
+  '\u304F': '\u304D',
+  '\u3050': '\u304E',
+  '\u3059': '\u3057',
+  '\u3064': '\u3061',
+  '\u306C': '\u306B',
+  '\u3076': '\u3073',
+  '\u3080': '\u307F',
+  '\u308B': '\u308A',
 };
 
 const Map<String, String> _godanOMap = <String, String>{
-  'ã†': 'ãŠã†',
-  'ã': 'ã“ã†',
-  'ã': 'ã”ã†',
-  'ã™': 'ãã†',
-  'ã¤': 'ã¨ã†',
-  'ã¬': 'ã®ã†',
-  'ã¶': 'ã¼ã†',
-  'ã‚€': 'ã‚‚ã†',
-  'ã‚‹': 'ã‚ã†',
+  '\u3046': '\u304A\u3046',
+  '\u304F': '\u3053\u3046',
+  '\u3050': '\u3054\u3046',
+  '\u3059': '\u305D\u3046',
+  '\u3064': '\u3068\u3046',
+  '\u306C': '\u306E\u3046',
+  '\u3076': '\u307C\u3046',
+  '\u3080': '\u3082\u3046',
+  '\u308B': '\u308D\u3046',
 };
 
 const Map<String, String> _godanEMap = <String, String>{
-  'ã†': 'ãˆã°',
-  'ã': 'ã‘ã°',
-  'ã': 'ã’ã°',
-  'ã™': 'ã›ã°',
-  'ã¤': 'ã¦ã°',
-  'ã¬': 'ã­ã°',
-  'ã¶': 'ã¹ã°',
-  'ã‚€': 'ã‚ã°',
-  'ã‚‹': 'ã‚Œã°',
+  '\u3046': '\u3048\u3070',
+  '\u304F': '\u3051\u3070',
+  '\u3050': '\u3052\u3070',
+  '\u3059': '\u305B\u3070',
+  '\u3064': '\u3066\u3070',
+  '\u306C': '\u306D\u3070',
+  '\u3076': '\u3079\u3070',
+  '\u3080': '\u3081\u3070',
+  '\u308B': '\u308C\u3070',
 };
 
 const Map<String, String> _godanAMap = <String, String>{
-  'ã†': 'ã‚',
-  'ã': 'ã‹',
-  'ã': 'ãŒ',
-  'ã™': 'ã•',
-  'ã¤': 'ãŸ',
-  'ã¬': 'ãª',
-  'ã¶': 'ã°',
-  'ã‚€': 'ã¾',
-  'ã‚‹': 'ã‚‰',
+  '\u3046': '\u308F',
+  '\u304F': '\u304B',
+  '\u3050': '\u304C',
+  '\u3059': '\u3055',
+  '\u3064': '\u305F',
+  '\u306C': '\u306A',
+  '\u3076': '\u3070',
+  '\u3080': '\u307E',
+  '\u308B': '\u3089',
 };
 
 String _teSurface(VerbEntry verb) => verb.conjugationFor(TrainerMode.te).answer;
@@ -821,10 +821,10 @@ String _taReading(VerbEntry verb) => verb.readingFor(TrainerMode.ta);
 String _naiReading(VerbEntry verb) => verb.readingFor(TrainerMode.nai);
 
 String _ruToTe(String text) {
-  if (text.endsWith('ã‚‹')) {
-    return '${text.substring(0, text.length - 1)}ã¦';
+  if (text.endsWith('\u308B')) {
+    return '${text.substring(0, text.length - 1)}\u3066';
   }
-  return '${text}ã¦';
+  return '${text}\u3066';
 }
 
 String _causativeSurface(VerbEntry verb) {
@@ -834,17 +834,17 @@ String _causativeSurface(VerbEntry verb) {
           verb.dictionary.substring(0, verb.dictionary.length - 1);
       final String ending =
           verb.dictionary.substring(verb.dictionary.length - 1);
-      return '$stem${_godanAMap[ending] ?? ''}ã›ã‚‹';
+      return '$stem${_godanAMap[ending] ?? ''}\u305B\u308B';
     case VerbClass.ichidan:
-      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}ã•ã›ã‚‹';
+      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}\u3055\u305B\u308B';
     case VerbClass.suru:
-      return 'ã•ã›ã‚‹';
+      return '\u3055\u305B\u308B';
     case VerbClass.kuru:
-      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}ã•ã›ã‚‹';
+      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}\u3055\u305B\u308B';
     case VerbClass.suruCompound:
       final String prefix =
           verb.dictionary.substring(0, verb.dictionary.length - 2);
-      return '${prefix}ã•ã›ã‚‹';
+      return '${prefix}\u3055\u305B\u308B';
   }
 }
 
@@ -853,16 +853,16 @@ String _causativeReading(VerbEntry verb) {
     case VerbClass.godan:
       final String stem = verb.reading.substring(0, verb.reading.length - 1);
       final String ending = verb.reading.substring(verb.reading.length - 1);
-      return '$stem${_godanAMap[ending] ?? ''}ã›ã‚‹';
+      return '$stem${_godanAMap[ending] ?? ''}\u305B\u308B';
     case VerbClass.ichidan:
-      return '${verb.reading.substring(0, verb.reading.length - 1)}ã•ã›ã‚‹';
+      return '${verb.reading.substring(0, verb.reading.length - 1)}\u3055\u305B\u308B';
     case VerbClass.suru:
-      return 'ã•ã›ã‚‹';
+      return '\u3055\u305B\u308B';
     case VerbClass.kuru:
-      return 'ã“ã•ã›ã‚‹';
+      return '\u3053\u3055\u305B\u308B';
     case VerbClass.suruCompound:
       final String prefix = verb.reading.substring(0, verb.reading.length - 2);
-      return '${prefix}ã•ã›ã‚‹';
+      return '${prefix}\u3055\u305B\u308B';
   }
 }
 
@@ -881,13 +881,13 @@ String _masuStemSurface(VerbEntry verb) {
     case VerbClass.ichidan:
       return verb.dictionary.substring(0, verb.dictionary.length - 1);
     case VerbClass.suru:
-      return 'ã—';
+      return '\u3057';
     case VerbClass.kuru:
       return verb.dictionary.substring(0, verb.dictionary.length - 1);
     case VerbClass.suruCompound:
       final String prefix =
           verb.dictionary.substring(0, verb.dictionary.length - 2);
-      return '${prefix}ã—';
+      return '${prefix}\u3057';
   }
 }
 
@@ -900,12 +900,12 @@ String _masuStemReading(VerbEntry verb) {
     case VerbClass.ichidan:
       return verb.reading.substring(0, verb.reading.length - 1);
     case VerbClass.suru:
-      return 'ã—';
+      return '\u3057';
     case VerbClass.kuru:
-      return 'ã';
+      return '\u304D';
     case VerbClass.suruCompound:
       final String prefix = verb.reading.substring(0, verb.reading.length - 2);
-      return '${prefix}ã—';
+      return '${prefix}\u3057';
   }
 }
 
@@ -918,15 +918,15 @@ String _volitionalSurface(VerbEntry verb) {
           verb.dictionary.substring(verb.dictionary.length - 1);
       return '$stem${_godanOMap[ending] ?? ''}';
     case VerbClass.ichidan:
-      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}ã‚ˆã†';
+      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}\u3088\u3046';
     case VerbClass.suru:
-      return 'ã—ã‚ˆã†';
+      return '\u3057\u3088\u3046';
     case VerbClass.kuru:
-      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}ã‚ˆã†';
+      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}\u3088\u3046';
     case VerbClass.suruCompound:
       final String prefix =
           verb.dictionary.substring(0, verb.dictionary.length - 2);
-      return '${prefix}ã—ã‚ˆã†';
+      return '${prefix}\u3057\u3088\u3046';
   }
 }
 
@@ -937,14 +937,14 @@ String _volitionalReading(VerbEntry verb) {
       final String ending = verb.reading.substring(verb.reading.length - 1);
       return '$stem${_godanOMap[ending] ?? ''}';
     case VerbClass.ichidan:
-      return '${verb.reading.substring(0, verb.reading.length - 1)}ã‚ˆã†';
+      return '${verb.reading.substring(0, verb.reading.length - 1)}\u3088\u3046';
     case VerbClass.suru:
-      return 'ã—ã‚ˆã†';
+      return '\u3057\u3088\u3046';
     case VerbClass.kuru:
-      return 'ã“ã‚ˆã†';
+      return '\u3053\u3088\u3046';
     case VerbClass.suruCompound:
       final String prefix = verb.reading.substring(0, verb.reading.length - 2);
-      return '${prefix}ã—ã‚ˆã†';
+      return '${prefix}\u3057\u3088\u3046';
   }
 }
 
@@ -957,15 +957,15 @@ String _baSurface(VerbEntry verb) {
           verb.dictionary.substring(verb.dictionary.length - 1);
       return '$stem${_godanEMap[ending] ?? ''}';
     case VerbClass.ichidan:
-      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}ã‚Œã°';
+      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}\u308C\u3070';
     case VerbClass.suru:
-      return 'ã™ã‚Œã°';
+      return '\u3059\u308C\u3070';
     case VerbClass.kuru:
-      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}ã‚Œã°';
+      return '${verb.dictionary.substring(0, verb.dictionary.length - 1)}\u308C\u3070';
     case VerbClass.suruCompound:
       final String prefix =
           verb.dictionary.substring(0, verb.dictionary.length - 2);
-      return '${prefix}ã™ã‚Œã°';
+      return '${prefix}\u3059\u308C\u3070';
   }
 }
 
@@ -976,49 +976,49 @@ String _baReading(VerbEntry verb) {
       final String ending = verb.reading.substring(verb.reading.length - 1);
       return '$stem${_godanEMap[ending] ?? ''}';
     case VerbClass.ichidan:
-      return '${verb.reading.substring(0, verb.reading.length - 1)}ã‚Œã°';
+      return '${verb.reading.substring(0, verb.reading.length - 1)}\u308C\u3070';
     case VerbClass.suru:
-      return 'ã™ã‚Œã°';
+      return '\u3059\u308C\u3070';
     case VerbClass.kuru:
-      return '${verb.reading.substring(0, verb.reading.length - 1)}ã‚Œã°';
+      return '${verb.reading.substring(0, verb.reading.length - 1)}\u308C\u3070';
     case VerbClass.suruCompound:
       final String prefix = verb.reading.substring(0, verb.reading.length - 2);
-      return '${prefix}ã™ã‚Œã°';
+      return '${prefix}\u3059\u308C\u3070';
   }
 }
 
 final Map<String, _VerbRule> _customRules = <String, _VerbRule>{
   '~shi': _VerbRule(
     title: '~shi',
-    buildAnswer: (verb) => '${verb.dictionary}ã—',
-    buildReading: (verb) => '${verb.reading}ã—',
+    buildAnswer: (verb) => '${verb.dictionary}\u3057',
+    buildReading: (verb) => '${verb.reading}\u3057',
   ),
   '~sou desu': _VerbRule(
     title: '~sou desu',
-    buildAnswer: (verb) => '${_masuStemSurface(verb)}ãã†ã§ã™',
-    buildReading: (verb) => '${_masuStemReading(verb)}ãã†ã§ã™',
+    buildAnswer: (verb) => '${_masuStemSurface(verb)}\u305D\u3046\u3067\u3059',
+    buildReading: (verb) => '${_masuStemReading(verb)}\u305D\u3046\u3067\u3059',
   ),
   '~te miru': _VerbRule(
     title: '~te miru',
-    buildAnswer: (verb) => '${_teSurface(verb)}ã¿ã‚‹',
-    buildReading: (verb) => '${_teReading(verb)}ã¿ã‚‹',
+    buildAnswer: (verb) => '${_teSurface(verb)}\u307F\u307E\u3059',
+    buildReading: (verb) => '${_teReading(verb)}\u307F\u307E\u3059',
   ),
   'Nara': _VerbRule(
     title: 'Nara',
-    buildAnswer: (verb) => '${verb.dictionary}ãªã‚‰',
-    buildReading: (verb) => '${verb.reading}ãªã‚‰',
+    buildAnswer: (verb) => '${verb.dictionary}\u306A\u3089',
+    buildReading: (verb) => '${verb.reading}\u306A\u3089',
   ),
   'hoshi': _VerbRule(
     title: 'hoshi',
-    buildAnswer: (verb) => '${_teSurface(verb)}ã»ã—ã„',
-    buildReading: (verb) => '${_teReading(verb)}ã»ã—ã„',
+    buildAnswer: (verb) => '${_teSurface(verb)}\u307B\u3057\u3044\u3067\u3059',
+    buildReading: (verb) => '${_teReading(verb)}\u307B\u3057\u3044\u3067\u3059',
   ),
   'ageru/kureru/morau': _VerbRule(
     title: 'ageru/kureru/morau',
     buildAnswer: (verb) =>
-        '${_teSurface(verb)}ã‚ã’ã‚‹ / ${_teSurface(verb)}ãã‚Œã‚‹ / ${_teSurface(verb)}ã‚‚ã‚‰ã†',
+        '${_teSurface(verb)}\u3042\u3052\u307E\u3059 / ${_teSurface(verb)}\u304F\u308C\u307E\u3059 / ${_teSurface(verb)}\u3082\u3089\u3044\u307E\u3059',
     buildReading: (verb) =>
-        '${_teReading(verb)}ã‚ã’ã‚‹ / ${_teReading(verb)}ãã‚Œã‚‹ / ${_teReading(verb)}ã‚‚ã‚‰ã†',
+        '${_teReading(verb)}\u3042\u3052\u307E\u3059 / ${_teReading(verb)}\u304F\u308C\u307E\u3059 / ${_teReading(verb)}\u3082\u3089\u3044\u307E\u3059',
   ),
   'Causativo': _VerbRule(
     title: 'Causativo',
@@ -1028,26 +1028,26 @@ final Map<String, _VerbRule> _customRules = <String, _VerbRule>{
   'Causativo + te ageru/kureru/morau': _VerbRule(
     title: 'Causativo + te ageru/kureru/morau',
     buildAnswer: (verb) =>
-        '${_causativeTeSurface(verb)}ã‚ã’ã‚‹ / ${_causativeTeSurface(verb)}ãã‚Œã‚‹ / ${_causativeTeSurface(verb)}ã‚‚ã‚‰ã†',
+        '${_causativeTeSurface(verb)}\u3042\u3052\u307E\u3059 / ${_causativeTeSurface(verb)}\u304F\u308C\u307E\u3059 / ${_causativeTeSurface(verb)}\u3082\u3089\u3044\u307E\u3059',
     buildReading: (verb) =>
-        '${_causativeTeReading(verb)}ã‚ã’ã‚‹ / ${_causativeTeReading(verb)}ãã‚Œã‚‹ / ${_causativeTeReading(verb)}ã‚‚ã‚‰ã†',
+        '${_causativeTeReading(verb)}\u3042\u3052\u307E\u3059 / ${_causativeTeReading(verb)}\u304F\u308C\u307E\u3059 / ${_causativeTeReading(verb)}\u3082\u3089\u3044\u307E\u3059',
   ),
   '-nasai': _VerbRule(
     title: '-nasai',
-    buildAnswer: (verb) => '${_masuStemSurface(verb)}ãªã•ã„',
-    buildReading: (verb) => '${_masuStemReading(verb)}ãªã•ã„',
+    buildAnswer: (verb) => '${_masuStemSurface(verb)}\u306A\u3055\u3044',
+    buildReading: (verb) => '${_masuStemReading(verb)}\u306A\u3055\u3044',
   ),
   '~tara': _VerbRule(
     title: '~tara',
-    buildAnswer: (verb) => '${_taSurface(verb)}ã‚‰',
-    buildReading: (verb) => '${_taReading(verb)}ã‚‰',
+    buildAnswer: (verb) => '${_taSurface(verb)}\u3089',
+    buildReading: (verb) => '${_taReading(verb)}\u3089',
   ),
   'number + mo / shika': _VerbRule(
     title: 'number + mo / shika',
     buildAnswer: (verb) =>
-        'ä¸€ã¤ã‚‚${_naiSurface(verb)} / ä¸€ã¤ã—ã‹${_naiSurface(verb)}',
+        '\u301C\u3082${_naiSurface(verb)} / \u301C\u3057\u304B${_naiSurface(verb)}',
     buildReading: (verb) =>
-        'ã²ã¨ã¤ã‚‚${_naiReading(verb)} / ã²ã¨ã¤ã—ã‹${_naiReading(verb)}',
+        '\u301C\u3082${_naiReading(verb)} / \u301C\u3057\u304B${_naiReading(verb)}',
   ),
   'Volitiva': _VerbRule(
     title: 'Volitiva',
@@ -1056,23 +1056,25 @@ final Map<String, _VerbRule> _customRules = <String, _VerbRule>{
   ),
   'Volitivo + to omotte': _VerbRule(
     title: 'Volitivo + to omotte',
-    buildAnswer: (verb) => '${_volitionalSurface(verb)}ã¨æ€ã£ã¦',
-    buildReading: (verb) => '${_volitionalReading(verb)}ã¨ãŠã‚‚ã£ã¦',
+    buildAnswer: (verb) =>
+        '${_volitionalSurface(verb)}\u3068\u601D\u3063\u3066\u3044\u307E\u3059',
+    buildReading: (verb) =>
+        '${_volitionalReading(verb)}\u3068\u304A\u3082\u3063\u3066\u3044\u307E\u3059',
   ),
   '~te oku': _VerbRule(
     title: '~te oku',
-    buildAnswer: (verb) => '${_teSurface(verb)}ãŠã',
-    buildReading: (verb) => '${_teReading(verb)}ãŠã',
+    buildAnswer: (verb) => '${_teSurface(verb)}\u304A\u304D\u307E\u3059',
+    buildReading: (verb) => '${_teReading(verb)}\u304A\u304D\u307E\u3059',
   ),
   'Relative': _VerbRule(
     title: 'Relative',
-    buildAnswer: (verb) => '${verb.dictionary}æ™‚',
-    buildReading: (verb) => '${verb.reading}ã¨ã',
+    buildAnswer: (verb) => '${verb.dictionary}\u3068\u304D',
+    buildReading: (verb) => '${verb.reading}\u3068\u304D',
   ),
   '~nagara': _VerbRule(
     title: '~nagara',
-    buildAnswer: (verb) => '${_masuStemSurface(verb)}ãªãŒã‚‰',
-    buildReading: (verb) => '${_masuStemReading(verb)}ãªãŒã‚‰',
+    buildAnswer: (verb) => '${_masuStemSurface(verb)}\u306A\u304C\u3089',
+    buildReading: (verb) => '${_masuStemReading(verb)}\u306A\u304C\u3089',
   ),
   'Forma ba': _VerbRule(
     title: 'Forma ba',
@@ -2156,7 +2158,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final Map<String, String> deckLabels = <String, String>{
-      for (final PracticeDeck value in _decks) value.id: _deckLabel(value, l10n),
+      for (final PracticeDeck value in _decks)
+        value.id: _deckLabel(value, l10n),
     };
     final bool deckAvailable = deck != null && _isDeckAvailable(deck);
     final bool customSelectionEmpty = deck?.kind == DeckKind.custom &&
@@ -2400,6 +2403,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final String percentText = hasData
         ? '${(effectiveSummary.percent * 100).toStringAsFixed(0)}%'
         : '\u3046\u301c\u3093';
+    final String noDataLabel =
+        _wrapOnWordBoundary(l10n.statsNoData, maxCharsPerLine: 9);
     final _TierInfo? tier = hasTierData
         ? (preview?.tier ?? _tierInfoForPercent(effectiveSummary.percent, l10n))
         : null;
@@ -2497,147 +2502,154 @@ class _TrainerHomePageState extends State<TrainerHomePage>
               height: 170,
               child: Stack(
                 children: [
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: AnimatedBuilder(
-                      animation: _proPulse,
-                      child: RepaintBoundary(
-                        child: CustomPaint(
-                          isComplex: true,
-                          willChange: false,
-                          painter: _PepPatternPainter(
-                            color: patternInk,
-                            gradientColors: patternGradient,
-                            glowColor: patternGlow,
-                            darkerEvery: patternStyle.darkerEvery,
-                            highlightEvery: patternStyle.highlightEvery,
-                            highlightColor: patternStyle.highlightColor,
-                            highlightGlowColor: patternStyle.highlightGlowColor,
-                          ),
-                        ),
-                      ),
-                      builder: (context, child) {
-                        final double bob =
-                            (_proPulse.value * 2 - 1) * _mascotBobAmplitude;
-                        return Transform.translate(
-                          offset: Offset(0, -bob),
-                          child: child,
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                if (isTierS)
                   Positioned.fill(
                     child: IgnorePointer(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.white.withOpacity(0.12),
-                              Colors.transparent,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                      child: AnimatedBuilder(
+                        animation: _proPulse,
+                        child: RepaintBoundary(
+                          child: CustomPaint(
+                            isComplex: true,
+                            willChange: false,
+                            painter: _PepPatternPainter(
+                              color: patternInk,
+                              gradientColors: patternGradient,
+                              glowColor: patternGlow,
+                              darkerEvery: patternStyle.darkerEvery,
+                              highlightEvery: patternStyle.highlightEvery,
+                              highlightColor: patternStyle.highlightColor,
+                              highlightGlowColor:
+                                  patternStyle.highlightGlowColor,
+                            ),
+                          ),
+                        ),
+                        builder: (context, child) {
+                          final double bob =
+                              (_proPulse.value * 2 - 1) * _mascotBobAmplitude;
+                          return Transform.translate(
+                            offset: Offset(0, -bob),
+                            child: child,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  if (isTierS)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withOpacity(0.12),
+                                Colors.transparent,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  Positioned.fill(
+                    child: Align(
+                      alignment: const Alignment(0, 0.32),
+                      child: AnimatedBuilder(
+                        animation: _proPulse,
+                        builder: (context, child) {
+                          final double bob =
+                              (_proPulse.value * 2 - 1) * _mascotBobAmplitude;
+                          final double baseY = hasData ? 0 : 100;
+                          return Transform.translate(
+                            offset: Offset(0, baseY + bob),
+                            child: child,
+                          );
+                        },
+                        child: RepaintBoundary(
+                          child: Transform.scale(
+                            scale: 1.55,
+                            child: Image.asset(
+                              mascotAsset,
+                              fit: BoxFit.contain,
+                              alignment: Alignment.center,
+                              filterQuality: FilterQuality.low,
+                              cacheHeight: mascotCacheHeight,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                Positioned.fill(
-                  child: Align(
-                    alignment: const Alignment(0, 0.32),
-                    child: AnimatedBuilder(
-                      animation: _proPulse,
-                      builder: (context, child) {
-                        final double bob =
-                            (_proPulse.value * 2 - 1) * _mascotBobAmplitude;
-                        final double baseY = hasData ? 0 : 100;
-                        return Transform.translate(
-                          offset: Offset(0, baseY + bob),
-                          child: child,
-                        );
-                      },
-                      child: RepaintBoundary(
-                        child: Transform.scale(
-                          scale: 1.55,
-                          child: Image.asset(
-                            mascotAsset,
-                            fit: BoxFit.contain,
-                            alignment: Alignment.center,
-                            filterQuality: FilterQuality.low,
-                            cacheHeight: mascotCacheHeight,
-                          ),
+                  Positioned(
+                    left: 12,
+                    top: 10,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          percentText,
+                          style: percentStyle,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (hasData)
+                    Positioned(
+                      left: 12,
+                      bottom: 10,
+                      child: _OutlinedText(
+                        text: l10n.statsCorrectOfTotal(
+                          effectiveSummary.correct,
+                          effectiveSummary.total,
+                        ),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.white.withOpacity(0.9),
+                              fontWeight: FontWeight.w700,
+                              shadows: isTierS
+                                  ? [
+                                      const Shadow(
+                                        color: Color(0xFFFF5CD6),
+                                        blurRadius: 10,
+                                      ),
+                                    ]
+                                  : null,
+                            ) ??
+                            const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                        strokeWidth: 2,
+                        strokeColor: Colors.black.withOpacity(0.72),
+                      ),
+                    ),
+                  if (!hasData)
+                    Positioned(
+                      left: 12,
+                      bottom: 10,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 96),
+                        child: Text(
+                          noDataLabel,
+                          maxLines: 3,
+                          softWrap: true,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.white.withOpacity(0.72),
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.2,
+                                height: 1.15,
+                              ) ??
+                              const TextStyle(
+                                color: Colors.white70,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-                Positioned(
-                  left: 12,
-                  top: 10,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        percentText,
-                        style: percentStyle,
-                      ),
-                    ],
-                  ),
-                ),
-                if (hasData)
-                  Positioned(
-                    left: 12,
-                    bottom: 10,
-                    child: _OutlinedText(
-                      text: l10n.statsCorrectOfTotal(
-                        effectiveSummary.correct,
-                        effectiveSummary.total,
-                      ),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white.withOpacity(0.9),
-                            fontWeight: FontWeight.w700,
-                            shadows: isTierS
-                                ? [
-                                    const Shadow(
-                                      color: Color(0xFFFF5CD6),
-                                      blurRadius: 10,
-                                    ),
-                                  ]
-                                : null,
-                          ) ??
-                          const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                      strokeWidth: 2,
-                      strokeColor: Colors.black.withOpacity(0.72),
+                  if (hasTierData && tier != null)
+                    Positioned(
+                      right: 10,
+                      bottom: 10,
+                      child: _TierBadge(tier: tier, compact: true),
                     ),
-                  ),
-                if (!hasData)
-                  Positioned(
-                    left: 12,
-                    bottom: 10,
-                    child: Text(
-                      l10n.statsNoData,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white.withOpacity(0.72),
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.2,
-                          ) ??
-                          const TextStyle(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ),
-                if (hasTierData && tier != null)
-                  Positioned(
-                    right: 10,
-                    bottom: 10,
-                    child: _TierBadge(tier: tier, compact: true),
-                  ),
                 ],
               ),
             ),
@@ -2645,6 +2657,34 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         ),
       ),
     );
+  }
+
+  String _wrapOnWordBoundary(String text, {int maxCharsPerLine = 9}) {
+    if (text.isEmpty || maxCharsPerLine < 1) {
+      return text;
+    }
+    final List<String> words = text.split(RegExp(r'\s+'));
+    if (words.length <= 1) {
+      return text;
+    }
+    final List<String> lines = <String>[];
+    String current = '';
+    for (final String word in words) {
+      final bool fitsCurrent = current.isNotEmpty &&
+          current.length + 1 + word.length <= maxCharsPerLine;
+      if (current.isEmpty) {
+        current = word;
+      } else if (fitsCurrent) {
+        current = '$current $word';
+      } else {
+        lines.add(current);
+        current = word;
+      }
+    }
+    if (current.isNotEmpty) {
+      lines.add(current);
+    }
+    return lines.join('\n');
   }
 
   List<DropdownMenuItem<PracticeDeck>> _deckDropdownItems(
@@ -2803,13 +2843,19 @@ class _TrainerHomePageState extends State<TrainerHomePage>
               fontWeight: FontWeight.w600,
               letterSpacing: 0.6,
             );
-    final TextStyle? promptStyle = Theme.of(context)
-        .textTheme
-        .displaySmall
-        ?.copyWith(fontWeight: FontWeight.bold);
+    final TextStyle promptStyle = (Theme.of(context).textTheme.displaySmall ??
+            Theme.of(context).textTheme.headlineMedium ??
+            const TextStyle())
+        .copyWith(
+      fontWeight: FontWeight.w800,
+      fontSize: 50,
+      height: 1.0,
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final bool showRankingBadge =
+            _answerVisible && _remainingForRankingCount() > 0;
         return SizedBox(
           width: double.infinity,
           child: Card(
@@ -2824,11 +2870,11 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                     textAlign: TextAlign.center,
                     style: headerStyle,
                   ),
-                  const SizedBox(height: 16),
-                  Text(
+                  const SizedBox(height: 26),
+                  _buildScaledWordText(
                     prompt,
-                    textAlign: TextAlign.center,
                     style: promptStyle,
+                    widthFactor: 0.82,
                   ),
                   if (showPromptReading) ...[
                     const SizedBox(height: 8),
@@ -2841,20 +2887,14 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                           ?.copyWith(color: Theme.of(context).hintColor),
                     ),
                   ],
-                  const SizedBox(height: 12),
-                  Flexible(
-                    fit: FlexFit.loose,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        child: _answerVisible
-                            ? _buildVerbAnswer()
-                            : _buildAnswerHint(),
-                      ),
-                    ),
+                  const Spacer(),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: _answerVisible
+                        ? _buildVerbAnswer()
+                        : _buildAnswerHint(),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: showRankingBadge ? 2 : 8),
                 ],
               ),
             ),
@@ -2887,9 +2927,6 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final bool needsScore =
         _answerVisible && currentResult == _AnswerResult.ungraded;
     final l10n = AppLocalizations.of(context)!;
-    final Widget actionRow = needsScore
-        ? _buildScoreLayout(canNavigate, l10n)
-        : _buildNavLayout(canNavigate, showSolutionStep, l10n);
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -2897,9 +2934,18 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 180),
-              child: actionRow,
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 320),
+              reverseDuration: const Duration(milliseconds: 260),
+              firstCurve: Curves.easeOutCubic,
+              secondCurve: Curves.easeOutCubic,
+              sizeCurve: Curves.easeInOutCubic,
+              alignment: Alignment.topCenter,
+              crossFadeState: needsScore
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              firstChild: _buildNavLayout(canNavigate, showSolutionStep, l10n),
+              secondChild: _buildScoreLayout(canNavigate, l10n),
             ),
             const SizedBox(height: 10),
             _buildProgressRow(),
@@ -3380,11 +3426,12 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final showReading = _shouldShowReading(_formattedAnswer(), reading);
     return Column(
       key: const ValueKey('answer'),
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
+        _buildScaledWordText(
           _formattedAnswer(),
-          textAlign: TextAlign.center,
           style: textStyle,
+          widthFactor: 0.88,
         ),
         if (showReading) ...[
           const SizedBox(height: 6),
@@ -3397,8 +3444,381 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                 ?.copyWith(color: Theme.of(context).hintColor),
           ),
         ],
+        const SizedBox(height: 24),
+        _buildAnswerTranslationLine(),
+        _buildRankingProgressBadge(),
       ],
     );
+  }
+
+  Widget _buildScaledWordText(
+    String text, {
+    required TextStyle style,
+    double widthFactor = 0.9,
+  }) {
+    return FractionallySizedBox(
+      widthFactor: widthFactor,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          text,
+          maxLines: 1,
+          softWrap: false,
+          textAlign: TextAlign.center,
+          style: style,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnswerTranslationLine() {
+    final String translation = _currentAnswerTranslation();
+    if (translation.isEmpty) {
+      return const SizedBox(height: 28);
+    }
+    return Text(
+      translation,
+      textAlign: TextAlign.center,
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Theme.of(context).hintColor.withOpacity(0.9),
+          ),
+    );
+  }
+
+  Widget _buildRankingProgressBadge() {
+    final int remaining = _remainingForRankingCount();
+    if (remaining <= 0) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [_proGold, _proPink],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.star, color: Colors.black, size: 16),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _rankingHintText(remaining),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.18),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                _rankingRemainingCountText(remaining),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  int _remainingForRankingCount() {
+    if (_isTierPreviewEnabled()) {
+      return 0;
+    }
+    final PracticeDeck? deck = _currentDeck;
+    if (deck == null) {
+      return 0;
+    }
+    final entries = _progressForDeck(deck.id);
+    final int total = entries.values.fold<int>(
+      0,
+      (sum, entry) => sum + entry.total,
+    );
+    return max(0, _tierSnapshotMinimumTotal - total);
+  }
+
+  String _rankingHintText(int remaining) {
+    return _localizedByLanguageCode(
+      en: 'Keep going to unlock ranking',
+      it: 'Continua per sbloccare il ranking',
+      fr: 'Continue pour debloquer le classement',
+      es: 'Sigue para desbloquear el ranking',
+    );
+  }
+
+  String _rankingRemainingCountText(int remaining) {
+    return _localizedByLanguageCode(
+      en: '$remaining left',
+      it: '$remaining mancanti',
+      fr: 'reste $remaining',
+      es: 'faltan $remaining',
+    );
+  }
+
+  String _currentAnswerTranslation() {
+    final VerbEntry? verb = _currentVerb;
+    if (verb == null) {
+      return '';
+    }
+    final String languageCode = Localizations.localeOf(context).languageCode;
+    final String meaning = localizedVerbMeaning(verb, languageCode);
+    if (meaning.isEmpty) {
+      return '';
+    }
+    final TrainerMode? mode = _currentQuestionMode;
+    if (mode != null) {
+      return _translationForMode(mode, meaning);
+    }
+    return _translationForRule(_currentDeck?.topic?.title, meaning);
+  }
+
+  String _translationForMode(TrainerMode mode, String meaning) {
+    String template;
+    switch (mode) {
+      case TrainerMode.te:
+        template = _localizedByLanguageCode(
+          en: '{v} and...',
+          it: '{v} e...',
+          fr: '{v} et...',
+          es: '{v} y...',
+        );
+        break;
+      case TrainerMode.ta:
+        template = _localizedByLanguageCode(
+          en: 'past: {v}',
+          it: 'passato: {v}',
+          fr: 'passe: {v}',
+          es: 'pasado: {v}',
+        );
+        break;
+      case TrainerMode.nai:
+        template = _localizedByLanguageCode(
+          en: 'not {v}',
+          it: 'non {v}',
+          fr: 'ne pas {v}',
+          es: 'no {v}',
+        );
+        break;
+      case TrainerMode.masu:
+        template = _localizedByLanguageCode(
+          en: 'polite: {v}',
+          it: 'cortese: {v}',
+          fr: 'forme polie: {v}',
+          es: 'forma cortese: {v}',
+        );
+        break;
+      case TrainerMode.potential:
+        template = _localizedByLanguageCode(
+          en: 'can {v}',
+          it: 'puo {v}',
+          fr: 'peut {v}',
+          es: 'puede {v}',
+        );
+        break;
+      case TrainerMode.kamo:
+        template = _localizedByLanguageCode(
+          en: 'maybe {v}',
+          it: 'forse {v}',
+          fr: 'peut-etre {v}',
+          es: 'quizas {v}',
+        );
+        break;
+      case TrainerMode.mix:
+        template = _localizedByLanguageCode(
+          en: 'to {v}',
+          it: '{v}',
+          fr: '{v}',
+          es: '{v}',
+        );
+        break;
+    }
+    return template.replaceAll('{v}', meaning);
+  }
+
+  String _translationForRule(String? ruleTitle, String meaning) {
+    String template;
+    switch (ruleTitle) {
+      case '~shi':
+        template = _localizedByLanguageCode(
+          en: '{v} and...',
+          it: '{v} e...',
+          fr: '{v} et...',
+          es: '{v} y...',
+        );
+        break;
+      case '~sou desu':
+        template = _localizedByLanguageCode(
+          en: 'it seems to {v}',
+          it: 'sembra {v}',
+          fr: 'il semble {v}',
+          es: 'parece {v}',
+        );
+        break;
+      case '~te miru':
+        template = _localizedByLanguageCode(
+          en: 'try to {v}',
+          it: 'provare a {v}',
+          fr: 'essayer de {v}',
+          es: 'intentar {v}',
+        );
+        break;
+      case 'Nara':
+        template = _localizedByLanguageCode(
+          en: 'if about: {v}',
+          it: 'se riguarda: {v}',
+          fr: 'si cela concerne: {v}',
+          es: 'si se trata de: {v}',
+        );
+        break;
+      case 'hoshi':
+        template = _localizedByLanguageCode(
+          en: 'want someone to {v}',
+          it: 'volere che qualcuno {v}',
+          fr: 'vouloir que quelqu un {v}',
+          es: 'querer que alguien {v}',
+        );
+        break;
+      case 'ageru/kureru/morau':
+        template = _localizedByLanguageCode(
+          en: '{v} for someone / receive {v}',
+          it: '{v} per qualcuno / ricevere {v}',
+          fr: '{v} pour quelqu un / recevoir {v}',
+          es: '{v} para alguien / recibir {v}',
+        );
+        break;
+      case 'Causativo':
+        template = _localizedByLanguageCode(
+          en: 'make/let someone {v}',
+          it: 'far/lasciare {v} qualcuno',
+          fr: 'faire/laisser quelqu un {v}',
+          es: 'hacer/dejar que alguien {v}',
+        );
+        break;
+      case 'Causativo + te ageru/kureru/morau':
+        template = _localizedByLanguageCode(
+          en: 'have someone {v} for someone',
+          it: 'far {v} qualcuno per qualcuno',
+          fr: 'faire {v} quelqu un pour quelqu un',
+          es: 'hacer que alguien {v} para alguien',
+        );
+        break;
+      case '-nasai':
+        template = _localizedByLanguageCode(
+          en: '{v}! (command)',
+          it: '{v}! (comando)',
+          fr: '{v}! (ordre)',
+          es: '{v}! (orden)',
+        );
+        break;
+      case '~tara':
+        template = _localizedByLanguageCode(
+          en: 'if/when: {v}',
+          it: 'se/quando: {v}',
+          fr: 'si/quand: {v}',
+          es: 'si/cuando: {v}',
+        );
+        break;
+      case 'number + mo / shika':
+        template = _localizedByLanguageCode(
+          en: 'as many as... / only...',
+          it: 'ben... / solo...',
+          fr: 'autant que... / seulement...',
+          es: 'hasta... / solo...',
+        );
+        break;
+      case 'Volitiva':
+        template = _localizedByLanguageCode(
+          en: "let's {v}",
+          it: 'facciamo {v}',
+          fr: 'allons {v}',
+          es: 'vamos a {v}',
+        );
+        break;
+      case 'Volitivo + to omotte':
+        template = _localizedByLanguageCode(
+          en: 'thinking of {v}',
+          it: 'sto pensando di {v}',
+          fr: 'en pensant a {v}',
+          es: 'pensando en {v}',
+        );
+        break;
+      case '~te oku':
+        template = _localizedByLanguageCode(
+          en: '{v} in advance',
+          it: '{v} in anticipo',
+          fr: '{v} a l avance',
+          es: '{v} por adelantado',
+        );
+        break;
+      case 'Relative':
+        template = _localizedByLanguageCode(
+          en: '{v} (relative clause)',
+          it: '{v} (frase relativa)',
+          fr: '{v} (proposition relative)',
+          es: '{v} (frase relativa)',
+        );
+        break;
+      case '~nagara':
+        template = _localizedByLanguageCode(
+          en: 'while {v}',
+          it: 'mentre {v}',
+          fr: 'en {v} en meme temps',
+          es: 'mientras {v}',
+        );
+        break;
+      case 'Forma ba':
+        template = _localizedByLanguageCode(
+          en: 'if {v}',
+          it: 'se {v}',
+          fr: 'si {v}',
+          es: 'si {v}',
+        );
+        break;
+      default:
+        template = _localizedByLanguageCode(
+          en: 'to {v}',
+          it: '{v}',
+          fr: '{v}',
+          es: '{v}',
+        );
+        break;
+    }
+    return template.replaceAll('{v}', meaning);
+  }
+
+  String _localizedByLanguageCode({
+    required String en,
+    required String it,
+    required String fr,
+    required String es,
+  }) {
+    final String code = Localizations.localeOf(context).languageCode;
+    switch (code) {
+      case 'it':
+        return it;
+      case 'fr':
+        return fr;
+      case 'es':
+        return es;
+      default:
+        return en;
+    }
   }
 
   TextStyle _answerTextStyle(BuildContext context) {
@@ -3408,7 +3828,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         theme.textTheme.titleMedium ??
         const TextStyle();
     final double requestedSize =
-        baseStyle.fontSize != null ? max(baseStyle.fontSize!, 28) : 28;
+        baseStyle.fontSize != null ? max(baseStyle.fontSize!, 40) : 40;
     return baseStyle.copyWith(
       fontSize: requestedSize,
       color: theme.colorScheme.secondary,
