@@ -2834,6 +2834,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final String prompt = _currentVerb?.dictionary ?? '';
     final String? promptReading = _currentVerb?.reading;
     final bool showPromptReading = _shouldShowReading(prompt, promptReading);
+    final bool canGoBack = _sessionActive && _historyIndex > 0;
 
     if (!hasQuestion) {
       final subtitle =
@@ -2868,10 +2869,29 @@ class _TrainerHomePageState extends State<TrainerHomePage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    header,
-                    textAlign: TextAlign.center,
-                    style: headerStyle,
+                  SizedBox(
+                    width: double.infinity,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 40),
+                          child: Text(
+                            header,
+                            textAlign: TextAlign.center,
+                            style: headerStyle,
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IconButton(
+                            onPressed: canGoBack ? _previousQuestion : null,
+                            tooltip: l10n.backButton,
+                            icon: const Icon(Icons.undo, size: 20),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   if (showMixTargetMode) ...[
                     const SizedBox(height: 10),
@@ -2956,6 +2976,21 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final bool needsScore =
         _answerVisible && currentResult == _AnswerResult.ungraded;
     final l10n = AppLocalizations.of(context)!;
+    final Widget mainControl = needsScore
+        ? _buildScoreButtons(canNavigate, l10n)
+        : SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: canNavigate ? _handleForwardAction : null,
+              icon: Icon(
+                showSolutionStep ? Icons.visibility : Icons.arrow_forward,
+                size: 20,
+              ),
+              label: Text(
+                showSolutionStep ? l10n.showSolutionButton : l10n.nextButton,
+              ),
+            ),
+          );
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -2963,19 +2998,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedCrossFade(
-              duration: const Duration(milliseconds: 320),
-              reverseDuration: const Duration(milliseconds: 260),
-              firstCurve: Curves.easeOutCubic,
-              secondCurve: Curves.easeOutCubic,
-              sizeCurve: Curves.easeInOutCubic,
-              alignment: Alignment.topCenter,
-              crossFadeState: needsScore
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
-              firstChild: _buildNavLayout(canNavigate, showSolutionStep, l10n),
-              secondChild: _buildScoreLayout(canNavigate, l10n),
-            ),
+            mainControl,
             const SizedBox(height: 10),
             _buildProgressRow(),
           ],
@@ -3014,58 +3037,6 @@ class _TrainerHomePageState extends State<TrainerHomePage>
             label: Text(l10n.answerCorrectButton),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildNavLayout(
-    bool canNavigate,
-    bool showSolutionStep,
-    AppLocalizations l10n,
-  ) {
-    return Row(
-      key: const ValueKey('navRow'),
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed:
-                _sessionActive && _historyIndex > 0 ? _previousQuestion : null,
-            icon: const Icon(Icons.arrow_back, size: 20),
-            label: Text(l10n.backButton),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: canNavigate ? _handleForwardAction : null,
-            icon: Icon(
-              showSolutionStep ? Icons.visibility : Icons.arrow_forward,
-              size: 20,
-            ),
-            label: Text(
-              showSolutionStep ? l10n.showSolutionButton : l10n.nextButton,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildScoreLayout(bool canNavigate, AppLocalizations l10n) {
-    return Column(
-      key: const ValueKey('scoreLayout'),
-      children: [
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed:
-                _sessionActive && _historyIndex > 0 ? _previousQuestion : null,
-            icon: const Icon(Icons.arrow_back, size: 20),
-            label: Text(l10n.backButton),
-          ),
-        ),
-        const SizedBox(height: 10),
-        _buildScoreButtons(canNavigate, l10n),
       ],
     );
   }
