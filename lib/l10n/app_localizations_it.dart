@@ -106,10 +106,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get nextButton => 'Avanti';
 
   @override
-  String get answerHint =>
-      'Tocca \"Mostra soluzione\" e poi scegli \"Corretto\" o \"Sbagliato\".';
-
-  @override
   String get preparingFirstQuestion => 'Sto preparando la prima domanda.';
 
   @override

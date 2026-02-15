@@ -30,7 +30,6 @@
   "backButton": "Retour",
   "showSolutionButton": "Afficher la solution",
   "nextButton": "Suivant",
-  "answerHint": "Touchez \"Afficher la solution\" puis choisissez \"Correct\" ou \"Faux\".",
   "preparingFirstQuestion": "Préparation de la première question.",
   "selectRuleToBegin": "Sélectionnez une règle pour commencer.",
   "statsButton": "Statistiques",

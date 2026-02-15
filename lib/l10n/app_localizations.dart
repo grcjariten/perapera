@@ -288,12 +288,6 @@ abstract class AppLocalizations {
   /// **'Next'**
   String get nextButton;
 
-  /// No description provided for @answerHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap \"Show solution\" and then choose \"Correct\" or \"Wrong\".'**
-  String get answerHint;
-
   /// No description provided for @preparingFirstQuestion.
   ///
   /// In en, this message translates to:

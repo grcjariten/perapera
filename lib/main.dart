@@ -2974,7 +2974,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                     duration: const Duration(milliseconds: 200),
                     child: _answerVisible
                         ? _buildVerbAnswer()
-                        : _buildAnswerHint(),
+                        : const SizedBox.shrink(),
                   ),
                   SizedBox(height: showRankingBadge ? 2 : 8),
                 ],
@@ -2983,22 +2983,6 @@ class _TrainerHomePageState extends State<TrainerHomePage>
           ),
         );
       },
-    );
-  }
-
-  Widget _buildAnswerHint() {
-    final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      key: const ValueKey('answerHint'),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Text(
-        l10n.answerHint,
-        textAlign: TextAlign.center,
-        style: Theme.of(context)
-            .textTheme
-            .bodySmall
-            ?.copyWith(color: Theme.of(context).hintColor),
-      ),
     );
   }
 
