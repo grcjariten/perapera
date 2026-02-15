@@ -3,6 +3,8 @@
   "settingsTitle": "Settings",
   "settingsLanguageTitle": "Language",
   "settingsLanguageSubtitle": "Choose the app language.",
+  "settingsLeftHandedModeTitle": "Left-handed mode",
+  "settingsLeftHandedModeSubtitle": "Swap answer buttons: Correct on the left, Wrong on the right.",
   "languageSystem": "Device language",
   "languageSystemSubtitle": "Use your device language.",
   "languageEnglish": "English",

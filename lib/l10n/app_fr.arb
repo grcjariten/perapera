@@ -3,6 +3,8 @@
   "settingsTitle": "Paramètres",
   "settingsLanguageTitle": "Langue",
   "settingsLanguageSubtitle": "Choisissez la langue de l'application.",
+  "settingsLeftHandedModeTitle": "Mode gaucher",
+  "settingsLeftHandedModeSubtitle": "Inverse les boutons de réponse : Correct à gauche, Faux à droite.",
   "languageSystem": "Langue de l'appareil",
   "languageSystemSubtitle": "Utilisez la langue de l'appareil.",
   "languageEnglish": "Anglais",

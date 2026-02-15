@@ -3,6 +3,8 @@
   "settingsTitle": "Ajustes",
   "settingsLanguageTitle": "Idioma",
   "settingsLanguageSubtitle": "Elige el idioma de la app.",
+  "settingsLeftHandedModeTitle": "Modo zurdos",
+  "settingsLeftHandedModeSubtitle": "Invierte los botones de respuesta: Correcto a la izquierda, Incorrecto a la derecha.",
   "languageSystem": "Idioma del dispositivo",
   "languageSystemSubtitle": "Usa el idioma del dispositivo.",
   "languageEnglish": "Inglés",

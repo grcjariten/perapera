@@ -126,6 +126,18 @@ abstract class AppLocalizations {
   /// **'Choose the app language.'**
   String get settingsLanguageSubtitle;
 
+  /// No description provided for @settingsLeftHandedModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Left-handed mode'**
+  String get settingsLeftHandedModeTitle;
+
+  /// No description provided for @settingsLeftHandedModeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap answer buttons: Correct on the left, Wrong on the right.'**
+  String get settingsLeftHandedModeSubtitle;
+
   /// No description provided for @languageSystem.
   ///
   /// In en, this message translates to:

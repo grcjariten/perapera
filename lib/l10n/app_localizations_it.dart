@@ -21,6 +21,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsLanguageSubtitle => 'Scegli la lingua dell\'app.';
 
   @override
+  String get settingsLeftHandedModeTitle => 'Modalità mancini';
+
+  @override
+  String get settingsLeftHandedModeSubtitle =>
+      'Inverte i pulsanti di valutazione: Corretto a sinistra, Sbagliato a destra.';
+
+  @override
   String get languageSystem => 'Lingua del dispositivo';
 
   @override

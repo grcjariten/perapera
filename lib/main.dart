@@ -20,6 +20,7 @@ void main() {
 }
 
 const String _localeOverrideKey = 'perapera_locale_override';
+const String _leftHandedModeKey = 'perapera_left_handed_mode';
 const String _feedbackUrl = 'https://forms.gle/1e1KPDdEjx6XqkF1A';
 const Locale _fallbackLocale = Locale('en');
 
@@ -1124,6 +1125,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
 
   bool _sessionActive = false;
   bool _answerVisible = false;
+  bool _leftHandedMode = false;
   int _questionCounter = 0;
 
   final InAppPurchase _iap = InAppPurchase.instance;
@@ -1153,6 +1155,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     _selectedDeck = _decks.isNotEmpty ? _decks.first : null;
     _loadCustomDeckSelection();
     _loadProgress();
+    _loadLeftHandedMode();
     _maybeShowTutorial();
     _loadTier();
     _initInAppPurchase();
@@ -1438,6 +1441,32 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     } catch (_) {
       return;
     }
+  }
+
+  Future<void> _loadLeftHandedMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool enabled = prefs.getBool(_leftHandedModeKey) ?? false;
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _leftHandedMode = enabled;
+    });
+  }
+
+  void _updateLeftHandedMode(bool enabled) {
+    if (_leftHandedMode == enabled) {
+      return;
+    }
+    setState(() {
+      _leftHandedMode = enabled;
+    });
+    unawaited(_saveLeftHandedMode(enabled));
+  }
+
+  Future<void> _saveLeftHandedMode(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_leftHandedModeKey, enabled);
   }
 
   Future<void> _saveProgress() async {
@@ -2111,6 +2140,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         builder: (context) => SettingsPage(
           localeOverride: widget.localeOverride,
           onLocaleChanged: widget.onLocaleChanged,
+          leftHandedMode: _leftHandedMode,
+          onLeftHandedModeChanged: _updateLeftHandedMode,
           onResetStats: _resetProgressData,
         ),
       ),
@@ -2883,7 +2914,9 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                           ),
                         ),
                         Align(
-                          alignment: Alignment.centerRight,
+                          alignment: _leftHandedMode
+                              ? Alignment.centerLeft
+                              : Alignment.centerRight,
                           child: IconButton(
                             onPressed: canGoBack ? _previousQuestion : null,
                             tooltip: l10n.backButton,
@@ -3019,25 +3052,26 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   }
 
   Widget _buildScoreButtons(bool canNavigate, AppLocalizations l10n) {
+    final Widget wrongButton = Expanded(
+      child: OutlinedButton.icon(
+        onPressed: canNavigate ? () => _markAnswerAndAdvance(false) : null,
+        icon: const Icon(Icons.close, size: 20),
+        label: Text(l10n.answerWrongButton),
+      ),
+    );
+    final Widget correctButton = Expanded(
+      child: ElevatedButton.icon(
+        onPressed: canNavigate ? () => _markAnswerAndAdvance(true) : null,
+        icon: const Icon(Icons.check, size: 20),
+        label: Text(l10n.answerCorrectButton),
+      ),
+    );
+    final List<Widget> scoreButtons = _leftHandedMode
+        ? <Widget>[correctButton, const SizedBox(width: 12), wrongButton]
+        : <Widget>[wrongButton, const SizedBox(width: 12), correctButton];
     return Row(
       key: const ValueKey('scoreButtons'),
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: canNavigate ? () => _markAnswerAndAdvance(false) : null,
-            icon: const Icon(Icons.close, size: 20),
-            label: Text(l10n.answerWrongButton),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: canNavigate ? () => _markAnswerAndAdvance(true) : null,
-            icon: const Icon(Icons.check, size: 20),
-            label: Text(l10n.answerCorrectButton),
-          ),
-        ),
-      ],
+      children: scoreButtons,
     );
   }
 
@@ -4870,11 +4904,15 @@ class SettingsPage extends StatefulWidget {
     super.key,
     required this.localeOverride,
     required this.onLocaleChanged,
+    required this.leftHandedMode,
+    required this.onLeftHandedModeChanged,
     required this.onResetStats,
   });
 
   final Locale? localeOverride;
   final ValueChanged<Locale?> onLocaleChanged;
+  final bool leftHandedMode;
+  final ValueChanged<bool> onLeftHandedModeChanged;
   final Future<void> Function() onResetStats;
 
   @override
@@ -4883,11 +4921,13 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   String? _selectedCode;
+  bool _leftHandedMode = false;
 
   @override
   void initState() {
     super.initState();
     _selectedCode = widget.localeOverride?.languageCode;
+    _leftHandedMode = widget.leftHandedMode;
   }
 
   @override
@@ -4897,6 +4937,9 @@ class _SettingsPageState extends State<SettingsPage> {
     final newCode = widget.localeOverride?.languageCode;
     if (oldCode != newCode) {
       _selectedCode = newCode;
+    }
+    if (oldWidget.leftHandedMode != widget.leftHandedMode) {
+      _leftHandedMode = widget.leftHandedMode;
     }
   }
 
@@ -4942,6 +4985,13 @@ class _SettingsPageState extends State<SettingsPage> {
       _selectedCode = code;
     });
     widget.onLocaleChanged(_localeFromCode(code));
+  }
+
+  void _updateLeftHandedMode(bool enabled) {
+    setState(() {
+      _leftHandedMode = enabled;
+    });
+    widget.onLeftHandedModeChanged(enabled);
   }
 
   Future<void> _confirmResetStats() async {
@@ -5067,6 +5117,19 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       ],
                     ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  child: SwitchListTile(
+                    secondary: const Icon(
+                      Icons.back_hand_outlined,
+                      color: _accentCool,
+                    ),
+                    title: Text(l10n.settingsLeftHandedModeTitle),
+                    subtitle: Text(l10n.settingsLeftHandedModeSubtitle),
+                    value: _leftHandedMode,
+                    onChanged: _updateLeftHandedMode,
                   ),
                 ),
                 const SizedBox(height: 16),

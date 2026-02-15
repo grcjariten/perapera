@@ -21,6 +21,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguageSubtitle => 'Choose the app language.';
 
   @override
+  String get settingsLeftHandedModeTitle => 'Left-handed mode';
+
+  @override
+  String get settingsLeftHandedModeSubtitle =>
+      'Swap answer buttons: Correct on the left, Wrong on the right.';
+
+  @override
   String get languageSystem => 'Device language';
 
   @override

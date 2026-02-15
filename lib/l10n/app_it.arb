@@ -3,6 +3,8 @@
   "settingsTitle": "Impostazioni",
   "settingsLanguageTitle": "Lingua",
   "settingsLanguageSubtitle": "Scegli la lingua dell'app.",
+  "settingsLeftHandedModeTitle": "Modalità mancini",
+  "settingsLeftHandedModeSubtitle": "Inverte i pulsanti di valutazione: Corretto a sinistra, Sbagliato a destra.",
   "languageSystem": "Lingua del dispositivo",
   "languageSystemSubtitle": "Usa la lingua del dispositivo.",
   "languageEnglish": "Inglese",

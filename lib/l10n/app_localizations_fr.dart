@@ -22,6 +22,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Choisissez la langue de l\'application.';
 
   @override
+  String get settingsLeftHandedModeTitle => 'Mode gaucher';
+
+  @override
+  String get settingsLeftHandedModeSubtitle =>
+      'Inverse les boutons de réponse : Correct à gauche, Faux à droite.';
+
+  @override
   String get languageSystem => 'Langue de l\'appareil';
 
   @override
