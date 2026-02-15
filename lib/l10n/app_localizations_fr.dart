@@ -25,7 +25,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get languageSystem => 'Langue de l\'appareil';
 
   @override
-  String get languageSystemSubtitle => 'Utiliser la langue de l\'appareil.';
+  String get languageSystemSubtitle => 'Utilisez la langue de l\'appareil.';
 
   @override
   String get languageEnglish => 'Anglais';
@@ -43,7 +43,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get reportProblemTitle => 'Signaler un problème';
 
   @override
-  String get reportProblemSubtitle => 'Ouvrir le formulaire de feedback.';
+  String get reportProblemSubtitle => 'Ouvrir le formulaire de retour.';
 
   @override
   String get reportProblemError => 'Impossible d\'ouvrir le lien.';
@@ -56,7 +56,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Supprimer toutes les données de précision enregistrées.';
 
   @override
-  String get resetStatsConfirmTitle => 'Réinitialiser les statistiques ?';
+  String get resetStatsConfirmTitle => 'Réinitialiser les statistiques ?';
 
   @override
   String get resetStatsConfirmBody =>
@@ -146,7 +146,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get statsNoData => 'Pas encore de données';
+  String get statsNoData => 'Aucune donnée pour l\'instant';
 
   @override
   String get statsTrendTitle => 'Tendance';
@@ -196,13 +196,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get proBenefitRules => 'Débloquez toutes les règles verrouillées.';
 
   @override
-  String get proBenefitVerbs => 'Accédez à tous les verbes premium.';
+  String get proBenefitVerbs => 'Débloquez tous les verbes premium.';
 
   @override
   String get proBenefitSupport => 'Soutenez le développement de PeraPera.';
 
   @override
-  String get proRulesTitle => 'Règles Pro';
+  String get proRulesTitle => 'Règles premium';
 
   @override
   String get proVerbsTitle => 'Verbes premium';
@@ -238,7 +238,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Pensez à la réponse puis touchez \"Afficher la solution\" et évaluez-vous.';
 
   @override
-  String get tutorialButton => 'OK, c\'est parti';
+  String get tutorialButton => 'OK, commençons';
 
   @override
   String get badgeFree => 'GRATUIT';
@@ -259,7 +259,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get modeMasu => 'forme en ~masu';
 
   @override
-  String get modePotential => 'forme ~potentielle';
+  String get modePotential => 'forme potentielle';
 
   @override
   String get modeMix => 'mix aléatoire';
@@ -301,7 +301,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ruleNumberMoShika => 'number + mo / shika';
 
   @override
-  String get ruleVolitional => 'Volitive';
+  String get ruleVolitional => 'Forme volitive';
 
   @override
   String get ruleVolitionalToOmotte => 'Volitif + to omotte';
@@ -310,7 +310,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ruleTeOku => '~te oku';
 
   @override
-  String get ruleRelative => 'Relative';
+  String get ruleRelative => 'Proposition relative';
 
   @override
   String get ruleNagara => '~nagara';
@@ -319,28 +319,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String get ruleBaForm => 'Forme ba';
 
   @override
-  String get customDeckTitle => 'Personnalisee';
+  String get customDeckTitle => 'Personnalisé';
 
   @override
-  String get customDeckSubtitle => 'Choisissez les regles a pratiquer.';
+  String get customDeckSubtitle => 'Choisissez les règles à pratiquer.';
 
   @override
   String get customDeckConfigure => 'Configurer';
 
   @override
   String customDeckSelectedCount(Object count) {
-    return 'Selectionnees: $count';
+    return 'Sélectionnées : $count';
   }
 
   @override
   String get customDeckEmptyHint =>
-      'Selectionnez au moins une regle pour commencer.';
+      'Sélectionnez au moins une règle pour commencer.';
 
   @override
   String get customDeckModesTitle => 'Formes de base';
 
   @override
-  String get customDeckRulesTitle => 'Regles';
+  String get customDeckRulesTitle => 'Règles';
 
   @override
   String get customDeckSave => 'Enregistrer';

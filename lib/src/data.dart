@@ -245,17 +245,17 @@ class VerbEntry {
     }
     switch (mode) {
       case TrainerMode.te:
-        return '${prefix}して';
+        return '$prefixして';
       case TrainerMode.ta:
-        return '${prefix}した';
+        return '$prefixした';
       case TrainerMode.nai:
-        return '${prefix}しない';
+        return '$prefixしない';
       case TrainerMode.masu:
         return '$prefix$_suruMasu';
       case TrainerMode.potential:
-        return '${prefix}できる';
+        return '$prefixできる';
       case TrainerMode.kamo:
-        return '${prefix}するかもしれません';
+        return '$prefixするかもしれません';
       case TrainerMode.mix:
         throw ArgumentError(
             'TrainerMode.mix va risolto prima di chiedere la lettura.');

@@ -107,7 +107,7 @@ class _TrainerAppState extends State<TrainerApp> {
           elevation: 2,
           color: _bgCard,
           surfaceTintColor: Colors.transparent,
-          shadowColor: Colors.black.withOpacity(0.35),
+          shadowColor: Colors.black.withValues(alpha: 0.35),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -138,11 +138,11 @@ class _TrainerAppState extends State<TrainerApp> {
               const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
@@ -541,23 +541,23 @@ class _TierBadge extends StatelessWidget {
         boxShadow: [
           if (isTierS)
             BoxShadow(
-              color: const Color(0xFFFF5CD6).withOpacity(0.9),
+              color: const Color(0xFFFF5CD6).withValues(alpha: 0.9),
               blurRadius: 30,
               offset: const Offset(0, 8),
             ),
           if (isTierS)
             BoxShadow(
-              color: const Color(0xFF8A4CFF).withOpacity(0.65),
+              color: const Color(0xFF8A4CFF).withValues(alpha: 0.65),
               blurRadius: 34,
               offset: const Offset(0, 10),
             ),
           BoxShadow(
-            color: glowColor.withOpacity(0.6),
+            color: glowColor.withValues(alpha: 0.6),
             blurRadius: 20,
             offset: const Offset(0, 6),
           ),
           BoxShadow(
-            color: glowColor.withOpacity(0.35),
+            color: glowColor.withValues(alpha: 0.35),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -824,7 +824,7 @@ String _ruToTe(String text) {
   if (text.endsWith('\u308B')) {
     return '${text.substring(0, text.length - 1)}\u3066';
   }
-  return '${text}\u3066';
+  return '$text\u3066';
 }
 
 String _causativeSurface(VerbEntry verb) {
@@ -844,7 +844,7 @@ String _causativeSurface(VerbEntry verb) {
     case VerbClass.suruCompound:
       final String prefix =
           verb.dictionary.substring(0, verb.dictionary.length - 2);
-      return '${prefix}\u3055\u305B\u308B';
+      return '$prefix\u3055\u305B\u308B';
   }
 }
 
@@ -862,7 +862,7 @@ String _causativeReading(VerbEntry verb) {
       return '\u3053\u3055\u305B\u308B';
     case VerbClass.suruCompound:
       final String prefix = verb.reading.substring(0, verb.reading.length - 2);
-      return '${prefix}\u3055\u305B\u308B';
+      return '$prefix\u3055\u305B\u308B';
   }
 }
 
@@ -887,7 +887,7 @@ String _masuStemSurface(VerbEntry verb) {
     case VerbClass.suruCompound:
       final String prefix =
           verb.dictionary.substring(0, verb.dictionary.length - 2);
-      return '${prefix}\u3057';
+      return '$prefix\u3057';
   }
 }
 
@@ -905,7 +905,7 @@ String _masuStemReading(VerbEntry verb) {
       return '\u304D';
     case VerbClass.suruCompound:
       final String prefix = verb.reading.substring(0, verb.reading.length - 2);
-      return '${prefix}\u3057';
+      return '$prefix\u3057';
   }
 }
 
@@ -926,7 +926,7 @@ String _volitionalSurface(VerbEntry verb) {
     case VerbClass.suruCompound:
       final String prefix =
           verb.dictionary.substring(0, verb.dictionary.length - 2);
-      return '${prefix}\u3057\u3088\u3046';
+      return '$prefix\u3057\u3088\u3046';
   }
 }
 
@@ -944,7 +944,7 @@ String _volitionalReading(VerbEntry verb) {
       return '\u3053\u3088\u3046';
     case VerbClass.suruCompound:
       final String prefix = verb.reading.substring(0, verb.reading.length - 2);
-      return '${prefix}\u3057\u3088\u3046';
+      return '$prefix\u3057\u3088\u3046';
   }
 }
 
@@ -965,7 +965,7 @@ String _baSurface(VerbEntry verb) {
     case VerbClass.suruCompound:
       final String prefix =
           verb.dictionary.substring(0, verb.dictionary.length - 2);
-      return '${prefix}\u3059\u308C\u3070';
+      return '$prefix\u3059\u308C\u3070';
   }
 }
 
@@ -983,7 +983,7 @@ String _baReading(VerbEntry verb) {
       return '${verb.reading.substring(0, verb.reading.length - 1)}\u308C\u3070';
     case VerbClass.suruCompound:
       final String prefix = verb.reading.substring(0, verb.reading.length - 2);
-      return '${prefix}\u3059\u308C\u3070';
+      return '$prefix\u3059\u308C\u3070';
   }
 }
 
@@ -1020,7 +1020,7 @@ final Map<String, _VerbRule> _customRules = <String, _VerbRule>{
     buildReading: (verb) =>
         '${_teReading(verb)}\u3042\u3052\u307E\u3059 / ${_teReading(verb)}\u304F\u308C\u307E\u3059 / ${_teReading(verb)}\u3082\u3089\u3044\u307E\u3059',
   ),
-  'Causativo': _VerbRule(
+  'Causativo': const _VerbRule(
     title: 'Causativo',
     buildAnswer: _causativeSurface,
     buildReading: _causativeReading,
@@ -1049,7 +1049,7 @@ final Map<String, _VerbRule> _customRules = <String, _VerbRule>{
     buildReading: (verb) =>
         '\u301C\u3082${_naiReading(verb)} / \u301C\u3057\u304B${_naiReading(verb)}',
   ),
-  'Volitiva': _VerbRule(
+  'Volitiva': const _VerbRule(
     title: 'Volitiva',
     buildAnswer: _volitionalSurface,
     buildReading: _volitionalReading,
@@ -1076,7 +1076,7 @@ final Map<String, _VerbRule> _customRules = <String, _VerbRule>{
     buildAnswer: (verb) => '${_masuStemSurface(verb)}\u306A\u304C\u3089',
     buildReading: (verb) => '${_masuStemReading(verb)}\u306A\u304C\u3089',
   ),
-  'Forma ba': _VerbRule(
+  'Forma ba': const _VerbRule(
     title: 'Forma ba',
     buildAnswer: _baSurface,
     buildReading: _baReading,
@@ -1671,7 +1671,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       }
     }
 
-    final customDeck = const PracticeDeck.custom();
+    const customDeck = PracticeDeck.custom();
     if (showLockedDecks || _isDeckAvailable(customDeck)) {
       if (labels.add(customDeck.id)) {
         decks.add(customDeck);
@@ -1871,13 +1871,12 @@ class _TrainerHomePageState extends State<TrainerHomePage>
               fontWeight: FontWeight.w700,
               letterSpacing: 1.4,
             );
-    return WillPopScope(
-      onWillPop: () async {
-        if (!_sessionActive) {
-          return true;
+    return PopScope(
+      canPop: !_sessionActive,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _sessionActive) {
+          _stopSession();
         }
-        _stopSession();
-        return false;
       },
       child: Scaffold(
         appBar: AppBar(
@@ -2213,26 +2212,26 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
-                      color: highlightAccent.withOpacity(0.35),
+                      color: highlightAccent.withValues(alpha: 0.35),
                       width: 1.2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: highlightAccent.withOpacity(0.15),
+                        color: highlightAccent.withValues(alpha: 0.15),
                         blurRadius: 18,
                         offset: const Offset(0, 6),
                       ),
                     ],
                   ),
                   child: DropdownButtonFormField<PracticeDeck>(
-                    value: deck,
+                    initialValue: deck,
                     isExpanded: true,
                     hint: Text(l10n.chooseRuleHint),
                     dropdownColor: _bgCard,
                     icon: Icon(Icons.expand_more, color: highlightAccent),
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: _bgCardAlt.withOpacity(0.95),
+                      fillColor: _bgCardAlt.withValues(alpha: 0.95),
                       prefixIcon: Icon(
                         Icons.auto_awesome,
                         color: highlightAccent,
@@ -2359,7 +2358,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: accent.withOpacity(0.35),
+                    color: accent.withValues(alpha: 0.35),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -2437,16 +2436,16 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final Color patternInk = isTierS
         // Keep Tier S base pattern color stable and unmistakably non-highlight.
         ? patternStyle.color
-        : patternStyle.color.withOpacity(patternOpacity);
+        : patternStyle.color.withValues(alpha: patternOpacity);
     final List<Color>? patternGradient = patternStyle.gradientColors
-        ?.map((color) => color.withOpacity(patternOpacity))
+        ?.map((color) => color.withValues(alpha: patternOpacity))
         .toList();
     final Color? patternGlow = isTierS
         ? patternStyle.glowColor
-        : patternStyle.glowColor?.withOpacity(patternOpacity);
+        : patternStyle.glowColor?.withValues(alpha: patternOpacity);
     final Color frameColor = isTierS
-        ? const Color(0xFFFF7AD1).withOpacity(0.8)
-        : accent.withOpacity(0.22);
+        ? const Color(0xFFFF7AD1).withValues(alpha: 0.8)
+        : accent.withValues(alpha: 0.22);
     final TextStyle percentStyle = theme.textTheme.headlineMedium?.copyWith(
           fontWeight: FontWeight.w700,
           color: hasData ? Colors.white : theme.hintColor,
@@ -2484,12 +2483,12 @@ class _TrainerHomePageState extends State<TrainerHomePage>
             boxShadow: isTierS
                 ? [
                     BoxShadow(
-                      color: const Color(0xFFFF5CD6).withOpacity(0.4),
+                      color: const Color(0xFFFF5CD6).withValues(alpha: 0.4),
                       blurRadius: 26,
                       offset: const Offset(0, 8),
                     ),
                     BoxShadow(
-                      color: const Color(0xFF8A4CFF).withOpacity(0.25),
+                      color: const Color(0xFF8A4CFF).withValues(alpha: 0.25),
                       blurRadius: 32,
                       offset: const Offset(0, 10),
                     ),
@@ -2540,7 +2539,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                Colors.white.withOpacity(0.12),
+                                Colors.white.withValues(alpha: 0.12),
                                 Colors.transparent,
                               ],
                               begin: Alignment.topLeft,
@@ -2602,7 +2601,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                           effectiveSummary.total,
                         ),
                         style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                               fontWeight: FontWeight.w700,
                               shadows: isTierS
                                   ? [
@@ -2618,7 +2617,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                               fontWeight: FontWeight.w700,
                             ),
                         strokeWidth: 2,
-                        strokeColor: Colors.black.withOpacity(0.72),
+                        strokeColor: Colors.black.withValues(alpha: 0.72),
                       ),
                     ),
                   if (!hasData)
@@ -2632,7 +2631,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                           maxLines: 3,
                           softWrap: true,
                           style: theme.textTheme.bodySmall?.copyWith(
-                                color: Colors.white.withOpacity(0.72),
+                                color: Colors.white.withValues(alpha: 0.72),
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.2,
                                 height: 1.15,
@@ -2705,13 +2704,13 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         final Color accentBase = _deckAccentColor(deck);
         final bool isDimmed = !isAvailable;
         final Color accent =
-            isDimmed ? theme.hintColor.withOpacity(0.4) : accentBase;
+            isDimmed ? theme.hintColor.withValues(alpha: 0.4) : accentBase;
         final Color labelColor = isAvailable ? Colors.white : disabledColor;
         final Color tileColor =
-            isDimmed ? _bgCardAlt.withOpacity(0.55) : _bgCardAlt;
+            isDimmed ? _bgCardAlt.withValues(alpha: 0.55) : _bgCardAlt;
         final Color borderColor = isDimmed
-            ? Colors.white.withOpacity(0.08)
-            : accentBase.withOpacity(0.22);
+            ? Colors.white.withValues(alpha: 0.08)
+            : accentBase.withValues(alpha: 0.22);
         return DropdownMenuItem<PracticeDeck>(
           value: deck,
           child: Container(
@@ -2736,7 +2735,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                         ? null
                         : [
                             BoxShadow(
-                              color: accent.withOpacity(0.35),
+                              color: accent.withValues(alpha: 0.35),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -2828,6 +2827,10 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final String header = headerDeck == null
         ? l10n.chooseRuleTitle
         : _deckLabel(headerDeck, l10n);
+    final bool showMixTargetMode = hasQuestion &&
+        headerDeck?.kind == DeckKind.verbs &&
+        headerDeck?.mode == TrainerMode.mix &&
+        _currentQuestionMode != null;
     final String prompt = _currentVerb?.dictionary ?? '';
     final String? promptReading = _currentVerb?.reading;
     final bool showPromptReading = _shouldShowReading(prompt, promptReading);
@@ -2870,7 +2873,33 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                     textAlign: TextAlign.center,
                     style: headerStyle,
                   ),
-                  const SizedBox(height: 26),
+                  if (showMixTargetMode) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _accentWarm.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: _accentWarm.withValues(alpha: 0.36),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        _modeLabel(_currentQuestionMode!, l10n),
+                        textAlign: TextAlign.center,
+                        style:
+                            Theme.of(context).textTheme.labelMedium?.copyWith(
+                                  color: _accentWarm,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                      ),
+                    ),
+                  ],
+                  SizedBox(height: showMixTargetMode ? 16 : 26),
                   _buildScaledWordText(
                     prompt,
                     style: promptStyle,
@@ -3109,7 +3138,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: Colors.white.withOpacity(0.08),
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
               valueColor: const AlwaysStoppedAnimation<Color>(_accentWarm),
             ),
           ),
@@ -3136,7 +3165,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
               borderRadius: BorderRadius.circular(999),
               boxShadow: [
                 BoxShadow(
-                  color: _proGold.withOpacity(0.35),
+                  color: _proGold.withValues(alpha: 0.35),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -3194,7 +3223,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.18),
+                color: Colors.black.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
@@ -3480,7 +3509,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       translation,
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: Theme.of(context).hintColor.withOpacity(0.9),
+            color: Theme.of(context).hintColor.withValues(alpha: 0.9),
           ),
     );
   }
@@ -3520,7 +3549,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.18),
+                color: Colors.black.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
@@ -3556,9 +3585,9 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   String _rankingHintText(int remaining) {
     return _localizedByLanguageCode(
       en: 'Keep going to unlock ranking',
-      it: 'Continua per sbloccare il ranking',
-      fr: 'Continue pour debloquer le classement',
-      es: 'Sigue para desbloquear el ranking',
+      it: 'Continua per sbloccare la classifica',
+      fr: 'Continuez pour débloquer le classement',
+      es: 'Sigue para desbloquear la clasificación',
     );
   }
 
@@ -3566,7 +3595,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     return _localizedByLanguageCode(
       en: '$remaining left',
       it: '$remaining mancanti',
-      fr: 'reste $remaining',
+      fr: 'il en reste $remaining',
       es: 'faltan $remaining',
     );
   }
@@ -3589,6 +3618,16 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   }
 
   String _translationForMode(TrainerMode mode, String meaning) {
+    String resolvedMeaning = meaning;
+    final String languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'it' && mode == TrainerMode.ta) {
+      resolvedMeaning = _italianPastParticiple(meaning);
+    } else if (languageCode == 'fr' && mode == TrainerMode.ta) {
+      resolvedMeaning = _frenchPastParticiple(meaning);
+    } else if (languageCode == 'es' && mode == TrainerMode.ta) {
+      resolvedMeaning = _spanishPastParticiple(meaning);
+    }
+
     String template;
     switch (mode) {
       case TrainerMode.te:
@@ -3603,14 +3642,14 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         template = _localizedByLanguageCode(
           en: 'past: {v}',
           it: 'passato: {v}',
-          fr: 'passe: {v}',
+          fr: 'passé : {v}',
           es: 'pasado: {v}',
         );
         break;
       case TrainerMode.nai:
         template = _localizedByLanguageCode(
           en: 'not {v}',
-          it: 'non {v}',
+          it: 'non: {v}',
           fr: 'ne pas {v}',
           es: 'no {v}',
         );
@@ -3618,15 +3657,15 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       case TrainerMode.masu:
         template = _localizedByLanguageCode(
           en: 'polite: {v}',
-          it: 'cortese: {v}',
+          it: 'forma cortese: {v}',
           fr: 'forme polie: {v}',
-          es: 'forma cortese: {v}',
+          es: 'forma cortés: {v}',
         );
         break;
       case TrainerMode.potential:
         template = _localizedByLanguageCode(
           en: 'can {v}',
-          it: 'puo {v}',
+          it: 'può {v}',
           fr: 'peut {v}',
           es: 'puede {v}',
         );
@@ -3635,8 +3674,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         template = _localizedByLanguageCode(
           en: 'maybe {v}',
           it: 'forse {v}',
-          fr: 'peut-etre {v}',
-          es: 'quizas {v}',
+          fr: 'peut-être {v}',
+          es: 'quizás {v}',
         );
         break;
       case TrainerMode.mix:
@@ -3648,7 +3687,217 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         );
         break;
     }
-    return template.replaceAll('{v}', meaning);
+    return template.replaceAll('{v}', resolvedMeaning);
+  }
+
+  String _italianPastParticiple(String infinitiveMeaning) {
+    final String trimmed = infinitiveMeaning.trim();
+    if (trimmed.isEmpty) {
+      return infinitiveMeaning;
+    }
+    final List<String> words = trimmed.split(RegExp(r'\s+'));
+    if (words.isEmpty) {
+      return infinitiveMeaning;
+    }
+    final String converted = _italianVerbPastParticiple(words.first);
+    if (converted == words.first) {
+      return infinitiveMeaning;
+    }
+    words[0] = converted;
+    return words.join(' ');
+  }
+
+  String _spanishPastParticiple(String infinitiveMeaning) {
+    final String trimmed = infinitiveMeaning.trim();
+    if (trimmed.isEmpty) {
+      return infinitiveMeaning;
+    }
+    final List<String> words = trimmed.split(RegExp(r'\s+'));
+    if (words.isEmpty) {
+      return infinitiveMeaning;
+    }
+    final String converted = _spanishVerbPastParticiple(words.first);
+    if (converted == words.first) {
+      return infinitiveMeaning;
+    }
+    words[0] = converted;
+    return words.join(' ');
+  }
+
+  String _frenchPastParticiple(String infinitiveMeaning) {
+    final String trimmed = infinitiveMeaning.trim();
+    if (trimmed.isEmpty) {
+      return infinitiveMeaning;
+    }
+    final List<String> words = trimmed.split(RegExp(r'\s+'));
+    if (words.isEmpty) {
+      return infinitiveMeaning;
+    }
+
+    int index = 0;
+    final String first = words.first.toLowerCase();
+    if ((first == 'se' || first == "s'") && words.length > 1) {
+      index = 1;
+    }
+
+    final String converted = _frenchVerbPastParticiple(words[index]);
+    if (converted == words[index]) {
+      return infinitiveMeaning;
+    }
+    words[index] = converted;
+    return words.join(' ');
+  }
+
+  String _frenchVerbPastParticiple(String infinitive) {
+    final String lower = infinitive.toLowerCase();
+
+    const Map<String, String> irregular = <String, String>{
+      'aller': 'allé',
+      'apprendre': 'appris',
+      'avoir': 'eu',
+      'boire': 'bu',
+      'comprendre': 'compris',
+      'courir': 'couru',
+      'devoir': 'dû',
+      'dire': 'dit',
+      'ecrire': 'écrit',
+      'écrire': 'écrit',
+      'etre': 'été',
+      'être': 'été',
+      'faire': 'fait',
+      'lire': 'lu',
+      'mettre': 'mis',
+      'mourir': 'mort',
+      'ouvrir': 'ouvert',
+      'prendre': 'pris',
+      'recevoir': 'reçu',
+      'savoir': 'su',
+      'tenir': 'tenu',
+      'venir': 'venu',
+      'voir': 'vu',
+      'vivre': 'vécu',
+      'eteindre': 'éteint',
+      'éteindre': 'éteint',
+    };
+
+    final String? irregularForm = irregular[lower];
+    if (irregularForm != null) {
+      return _matchInitialCase(infinitive, irregularForm);
+    }
+
+    String? generated;
+    if (lower.endsWith('er') && lower.length > 2) {
+      generated = '${lower.substring(0, lower.length - 2)}é';
+    } else if (lower.endsWith('ir') && lower.length > 2) {
+      generated = '${lower.substring(0, lower.length - 2)}i';
+    } else if (lower.endsWith('re') && lower.length > 2) {
+      generated = '${lower.substring(0, lower.length - 2)}u';
+    }
+    if (generated == null) {
+      return infinitive;
+    }
+    return _matchInitialCase(infinitive, generated);
+  }
+
+  String _spanishVerbPastParticiple(String infinitive) {
+    final String lower = infinitive.toLowerCase();
+
+    const Map<String, String> irregular = <String, String>{
+      'abrir': 'abierto',
+      'devolver': 'devuelto',
+      'escribir': 'escrito',
+      'hacer': 'hecho',
+      'ir': 'ido',
+      'morir': 'muerto',
+      'poner': 'puesto',
+      'resolver': 'resuelto',
+      'romper': 'roto',
+      'ver': 'visto',
+      'volver': 'vuelto',
+    };
+
+    String base = lower;
+    if (base.endsWith('se') && base.length > 2) {
+      base = base.substring(0, base.length - 2);
+    }
+
+    final String? irregularForm = irregular[base];
+    if (irregularForm != null) {
+      return _matchInitialCase(infinitive, irregularForm);
+    }
+
+    String? generated;
+    if (base.endsWith('ar') && base.length > 2) {
+      generated = '${base.substring(0, base.length - 2)}ado';
+    } else if ((base.endsWith('er') || base.endsWith('ir')) &&
+        base.length > 2) {
+      generated = '${base.substring(0, base.length - 2)}ido';
+    }
+    if (generated == null) {
+      return infinitive;
+    }
+    return _matchInitialCase(infinitive, generated);
+  }
+
+  String _italianVerbPastParticiple(String infinitive) {
+    final String lower = infinitive.toLowerCase();
+
+    const Map<String, String> irregular = <String, String>{
+      'accendere': 'acceso',
+      'aprire': 'aperto',
+      'bere': 'bevuto',
+      'chiudere': 'chiuso',
+      'correre': 'corso',
+      'decidere': 'deciso',
+      'fare': 'fatto',
+      'leggere': 'letto',
+      'morire': 'morto',
+      'prendere': 'preso',
+      'raccogliere': 'raccolto',
+      'scegliere': 'scelto',
+      'scrivere': 'scritto',
+      'spegnere': 'spento',
+      'togliere': 'tolto',
+      'vedere': 'visto',
+      'venire': 'venuto',
+      'vivere': 'vissuto',
+    };
+
+    String base = lower;
+    if (base.endsWith('rsi') && base.length > 3) {
+      base = '${base.substring(0, base.length - 3)}re';
+    }
+
+    final String? irregularForm = irregular[base];
+    if (irregularForm != null) {
+      return _matchInitialCase(infinitive, irregularForm);
+    }
+
+    String? generated;
+    if (base.endsWith('are') && base.length > 3) {
+      generated = '${base.substring(0, base.length - 3)}ato';
+    } else if (base.endsWith('ere') && base.length > 3) {
+      generated = '${base.substring(0, base.length - 3)}uto';
+    } else if (base.endsWith('ire') && base.length > 3) {
+      generated = '${base.substring(0, base.length - 3)}ito';
+    }
+    if (generated == null) {
+      return infinitive;
+    }
+    return _matchInitialCase(infinitive, generated);
+  }
+
+  String _matchInitialCase(String source, String value) {
+    if (source.isEmpty || value.isEmpty) {
+      return value;
+    }
+    final String first = source[0];
+    final bool startsUpper =
+        first == first.toUpperCase() && first != first.toLowerCase();
+    if (!startsUpper) {
+      return value;
+    }
+    return '${value[0].toUpperCase()}${value.substring(1)}';
   }
 
   String _translationForRule(String? ruleTitle, String meaning) {
@@ -3665,63 +3914,63 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       case '~sou desu':
         template = _localizedByLanguageCode(
           en: 'it seems to {v}',
-          it: 'sembra {v}',
-          fr: 'il semble {v}',
+          it: 'sembra: {v}',
+          fr: 'il semble : {v}',
           es: 'parece {v}',
         );
         break;
       case '~te miru':
         template = _localizedByLanguageCode(
           en: 'try to {v}',
-          it: 'provare a {v}',
-          fr: 'essayer de {v}',
+          it: 'provare a: {v}',
+          fr: 'essayer de : {v}',
           es: 'intentar {v}',
         );
         break;
       case 'Nara':
         template = _localizedByLanguageCode(
           en: 'if about: {v}',
-          it: 'se riguarda: {v}',
-          fr: 'si cela concerne: {v}',
+          it: 'se si parla di: {v}',
+          fr: 'si cela concerne : {v}',
           es: 'si se trata de: {v}',
         );
         break;
       case 'hoshi':
         template = _localizedByLanguageCode(
           en: 'want someone to {v}',
-          it: 'volere che qualcuno {v}',
-          fr: 'vouloir que quelqu un {v}',
+          it: 'volere che qualcuno: {v}',
+          fr: 'vouloir que quelqu’un : {v}',
           es: 'querer que alguien {v}',
         );
         break;
       case 'ageru/kureru/morau':
         template = _localizedByLanguageCode(
           en: '{v} for someone / receive {v}',
-          it: '{v} per qualcuno / ricevere {v}',
-          fr: '{v} pour quelqu un / recevoir {v}',
+          it: '{v} per qualcuno / ricevere: {v}',
+          fr: '{v} pour quelqu’un / recevoir : {v}',
           es: '{v} para alguien / recibir {v}',
         );
         break;
       case 'Causativo':
         template = _localizedByLanguageCode(
           en: 'make/let someone {v}',
-          it: 'far/lasciare {v} qualcuno',
-          fr: 'faire/laisser quelqu un {v}',
+          it: 'far fare a qualcuno: {v}',
+          fr: 'faire/laisser quelqu’un : {v}',
           es: 'hacer/dejar que alguien {v}',
         );
         break;
       case 'Causativo + te ageru/kureru/morau':
         template = _localizedByLanguageCode(
           en: 'have someone {v} for someone',
-          it: 'far {v} qualcuno per qualcuno',
-          fr: 'faire {v} quelqu un pour quelqu un',
+          it: 'far fare a qualcuno: {v}, per qualcuno',
+          fr: 'faire {v} par quelqu’un, pour quelqu’un',
           es: 'hacer que alguien {v} para alguien',
         );
         break;
       case '-nasai':
         template = _localizedByLanguageCode(
           en: '{v}! (command)',
-          it: '{v}! (comando)',
+          it: '{v}! (imperativo)',
           fr: '{v}! (ordre)',
           es: '{v}! (orden)',
         );
@@ -3730,14 +3979,14 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         template = _localizedByLanguageCode(
           en: 'if/when: {v}',
           it: 'se/quando: {v}',
-          fr: 'si/quand: {v}',
+          fr: 'si/quand : {v}',
           es: 'si/cuando: {v}',
         );
         break;
       case 'number + mo / shika':
         template = _localizedByLanguageCode(
           en: 'as many as... / only...',
-          it: 'ben... / solo...',
+          it: 'addirittura... / solo...',
           fr: 'autant que... / seulement...',
           es: 'hasta... / solo...',
         );
@@ -3745,16 +3994,16 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       case 'Volitiva':
         template = _localizedByLanguageCode(
           en: "let's {v}",
-          it: 'facciamo {v}',
-          fr: 'allons {v}',
+          it: 'facciamo: {v}',
+          fr: 'allons : {v}',
           es: 'vamos a {v}',
         );
         break;
       case 'Volitivo + to omotte':
         template = _localizedByLanguageCode(
           en: 'thinking of {v}',
-          it: 'sto pensando di {v}',
-          fr: 'en pensant a {v}',
+          it: 'sto pensando di: {v}',
+          fr: 'en pensant à : {v}',
           es: 'pensando en {v}',
         );
         break;
@@ -3762,7 +4011,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         template = _localizedByLanguageCode(
           en: '{v} in advance',
           it: '{v} in anticipo',
-          fr: '{v} a l avance',
+          fr: '{v} à l’avance',
           es: '{v} por adelantado',
         );
         break;
@@ -3777,15 +4026,15 @@ class _TrainerHomePageState extends State<TrainerHomePage>
       case '~nagara':
         template = _localizedByLanguageCode(
           en: 'while {v}',
-          it: 'mentre {v}',
-          fr: 'en {v} en meme temps',
+          it: 'mentre: {v}',
+          fr: 'en {v} en même temps',
           es: 'mientras {v}',
         );
         break;
       case 'Forma ba':
         template = _localizedByLanguageCode(
           en: 'if {v}',
-          it: 'se {v}',
+          it: 'se: {v}',
           fr: 'si {v}',
           es: 'si {v}',
         );
@@ -4074,8 +4323,8 @@ class _StatsPageState extends State<_StatsPage> {
     final double statsHeaderEndTintAmount =
         isTierS ? 0.3 : ((isTierA || isTierB) ? 0.16 : 0.22);
     final Color statsHeaderFrameColor = isTierS
-        ? const Color(0xFFFF7AD1).withOpacity(0.8)
-        : widget.accentColor.withOpacity(0.28);
+        ? const Color(0xFFFF7AD1).withValues(alpha: 0.8)
+        : widget.accentColor.withValues(alpha: 0.28);
     final List<Color> statsHeaderGradient = <Color>[
       Color.lerp(_bgCard, statsHeaderTint, statsHeaderStartTintAmount) ??
           _bgCard,
@@ -4106,11 +4355,13 @@ class _StatsPageState extends State<_StatsPage> {
           color: Colors.white,
         );
     final TextStyle statsMetaStyle = theme.textTheme.bodySmall?.copyWith(
-          color: hasCurrent ? Colors.white.withOpacity(0.9) : Colors.white70,
+          color:
+              hasCurrent ? Colors.white.withValues(alpha: 0.9) : Colors.white70,
           fontWeight: FontWeight.w700,
         ) ??
         TextStyle(
-          color: hasCurrent ? Colors.white.withOpacity(0.9) : Colors.white70,
+          color:
+              hasCurrent ? Colors.white.withValues(alpha: 0.9) : Colors.white70,
           fontWeight: FontWeight.w700,
         );
 
@@ -4147,7 +4398,7 @@ class _StatsPageState extends State<_StatsPage> {
               boxShadow: isTierS
                   ? [
                       BoxShadow(
-                        color: const Color(0xFFFF5CD6).withOpacity(0.36),
+                        color: const Color(0xFFFF5CD6).withValues(alpha: 0.36),
                         blurRadius: 22,
                         offset: const Offset(0, 8),
                       ),
@@ -4231,7 +4482,7 @@ class _StatsPageState extends State<_StatsPage> {
               color: _bgCard,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withOpacity(0.06),
+                color: Colors.white.withValues(alpha: 0.06),
               ),
             ),
             child: Column(
@@ -4362,7 +4613,7 @@ class _StatsPageState extends State<_StatsPage> {
         color: _bgCardAlt,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: accent.withOpacity(0.25),
+          color: accent.withValues(alpha: 0.25),
         ),
       ),
       child: Column(
@@ -4405,7 +4656,7 @@ class _StatsPageState extends State<_StatsPage> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: accent.withOpacity(0.25),
+          color: accent.withValues(alpha: 0.25),
         ),
         color: _bgCardAlt,
       ),
@@ -4430,7 +4681,7 @@ class _ProgressChartPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final Paint gridPaint = Paint()
-      ..color = Colors.white.withOpacity(0.06)
+      ..color = Colors.white.withValues(alpha: 0.06)
       ..strokeWidth = 1;
     for (final double level in [0.0, 0.5, 1.0]) {
       final double y = size.height - (size.height * level);
@@ -4456,8 +4707,8 @@ class _ProgressChartPainter extends CustomPainter {
       ..style = PaintingStyle.fill
       ..shader = LinearGradient(
         colors: [
-          accentColor.withOpacity(0.35),
-          accentColor.withOpacity(0.05),
+          accentColor.withValues(alpha: 0.35),
+          accentColor.withValues(alpha: 0.05),
         ],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
@@ -4823,20 +5074,26 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        for (int i = 0; i < options.length; i++) ...[
-                          if (i > 0) const Divider(height: 1),
-                          RadioListTile<String?>(
-                            value: options[i].code,
-                            groupValue: selectedCode,
-                            onChanged: _updateLocale,
-                            title: Text(options[i].title),
-                            subtitle: options[i].subtitle == null
-                                ? null
-                                : Text(options[i].subtitle!),
-                            contentPadding: EdgeInsets.zero,
-                            dense: true,
+                        RadioGroup<String?>(
+                          groupValue: selectedCode,
+                          onChanged: _updateLocale,
+                          child: Column(
+                            children: [
+                              for (int i = 0; i < options.length; i++) ...[
+                                if (i > 0) const Divider(height: 1),
+                                RadioListTile<String?>(
+                                  value: options[i].code,
+                                  title: Text(options[i].title),
+                                  subtitle: options[i].subtitle == null
+                                      ? null
+                                      : Text(options[i].subtitle!),
+                                  contentPadding: EdgeInsets.zero,
+                                  dense: true,
+                                ),
+                              ],
+                            ],
                           ),
-                        ],
+                        ),
                       ],
                     ),
                   ),
@@ -5071,7 +5328,7 @@ class _CustomDeckPageState extends State<_CustomDeckPage> {
     final bool selected = _selectedIds.contains(option.id);
     final Color accent =
         option.kind == _CustomOptionKind.mode ? _accentWarm : _accentCool;
-    final Color barColor = selected ? accent : accent.withOpacity(0.3);
+    final Color barColor = selected ? accent : accent.withValues(alpha: 0.3);
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () => _toggleOption(option.id, !selected),
@@ -5082,7 +5339,7 @@ class _CustomDeckPageState extends State<_CustomDeckPage> {
           color: _bgCardAlt,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: accent.withOpacity(selected ? 0.4 : 0.18),
+            color: accent.withValues(alpha: selected ? 0.4 : 0.18),
           ),
         ),
         child: Row(
@@ -5103,7 +5360,7 @@ class _CustomDeckPageState extends State<_CustomDeckPage> {
                 boxShadow: selected
                     ? [
                         BoxShadow(
-                          color: accent.withOpacity(0.35),
+                          color: accent.withValues(alpha: 0.35),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -5395,7 +5652,7 @@ class ProUpsellPage extends StatelessWidget {
               decoration: BoxDecoration(
                 color: _bgCardAlt,
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: Colors.white.withOpacity(0.06)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
               ),
               child: Text(
                 item,

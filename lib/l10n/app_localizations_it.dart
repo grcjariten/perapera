@@ -48,7 +48,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get reportProblemError => 'Impossibile aprire il link.';
 
   @override
-  String get resetStatsTitle => 'Azzera statistiche';
+  String get resetStatsTitle => 'Azzera le statistiche';
 
   @override
   String get resetStatsSubtitle =>
@@ -74,8 +74,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chooseRuleTitle => 'Scegli la regola';
 
   @override
-  String get chooseRuleSubtitle =>
-      'Seleziona la regola e poi inizia la sessione.';
+  String get chooseRuleSubtitle => 'Seleziona una regola e avvia la sessione.';
 
   @override
   String get chooseRuleHint => 'Scegli una regola';
@@ -145,7 +144,7 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get statsNoData => 'Nessun dato';
+  String get statsNoData => 'Nessun dato disponibile';
 
   @override
   String get statsTrendTitle => 'Andamento';
@@ -194,13 +193,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get proBenefitRules => 'Sblocca tutte le regole bloccate.';
 
   @override
-  String get proBenefitVerbs => 'Accedi a tutti i verbi premium.';
+  String get proBenefitVerbs => 'Sblocca tutti i verbi premium.';
 
   @override
   String get proBenefitSupport => 'Supporta lo sviluppo di PeraPera.';
 
   @override
-  String get proRulesTitle => 'Regole Pro';
+  String get proRulesTitle => 'Regole premium';
 
   @override
   String get proVerbsTitle => 'Verbi premium';
@@ -234,7 +233,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Pensa alla risposta, poi tocca \"Mostra soluzione\" e valuta la risposta.';
 
   @override
-  String get tutorialButton => 'Ok, si parte';
+  String get tutorialButton => 'Ok, iniziamo';
 
   @override
   String get badgeFree => 'GRATIS';
@@ -255,7 +254,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get modeMasu => 'forma ~masu';
 
   @override
-  String get modePotential => 'forma ~potenziale';
+  String get modePotential => 'forma potenziale';
 
   @override
   String get modeMix => 'mix casuale';
@@ -297,7 +296,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get ruleNumberMoShika => 'number + mo / shika';
 
   @override
-  String get ruleVolitional => 'Volitiva';
+  String get ruleVolitional => 'Forma volitiva';
 
   @override
   String get ruleVolitionalToOmotte => 'Volitivo + to omotte';
@@ -306,7 +305,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get ruleTeOku => '~te oku';
 
   @override
-  String get ruleRelative => 'Relativa';
+  String get ruleRelative => 'Frase relativa';
 
   @override
   String get ruleNagara => '~nagara';
@@ -332,7 +331,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get customDeckEmptyHint => 'Seleziona almeno una regola per iniziare.';
 
   @override
-  String get customDeckModesTitle => 'Forme base';
+  String get customDeckModesTitle => 'Forme di base';
 
   @override
   String get customDeckRulesTitle => 'Regole';

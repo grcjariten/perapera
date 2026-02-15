@@ -24,7 +24,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get languageSystem => 'Idioma del dispositivo';
 
   @override
-  String get languageSystemSubtitle => 'Usar el idioma del dispositivo.';
+  String get languageSystemSubtitle => 'Usa el idioma del dispositivo.';
 
   @override
   String get languageEnglish => 'Inglés';
@@ -42,7 +42,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get reportProblemTitle => 'Informar de un problema';
 
   @override
-  String get reportProblemSubtitle => 'Abrir el formulario de comentarios.';
+  String get reportProblemSubtitle => 'Abre el formulario de comentarios.';
 
   @override
   String get reportProblemError => 'No se pudo abrir el enlace.';
@@ -59,7 +59,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get resetStatsConfirmBody =>
-      'Esto eliminará de forma permanente tu progreso de todas las reglas.';
+      'Esto eliminará de forma permanente tu progreso en todas las reglas.';
 
   @override
   String get resetStatsConfirmButton => 'Restablecer';
@@ -179,14 +179,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get proBannerText =>
-      'Pro: desbloquea reglas bloqueadas y nuevos verbos.';
+      'Pro: desbloquea las reglas bloqueadas y nuevos verbos.';
 
   @override
   String get proBannerCta => 'Pasar a Pro';
 
   @override
   String get proUpsellSnackbar =>
-      'Pasa a Pro para desbloquear reglas bloqueadas y nuevos verbos.';
+      'Pasa a Pro para desbloquear las reglas bloqueadas y nuevos verbos.';
 
   @override
   String get proBenefitsTitle => 'Ventajas Pro';
@@ -195,13 +195,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get proBenefitRules => 'Desbloquea todas las reglas bloqueadas.';
 
   @override
-  String get proBenefitVerbs => 'Accede a todos los verbos premium.';
+  String get proBenefitVerbs => 'Desbloquea todos los verbos premium.';
 
   @override
   String get proBenefitSupport => 'Apoya el desarrollo de PeraPera.';
 
   @override
-  String get proRulesTitle => 'Reglas Pro';
+  String get proRulesTitle => 'Reglas premium';
 
   @override
   String get proVerbsTitle => 'Verbos premium';
@@ -233,10 +233,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tutorialLine2 =>
-      'Piensa la respuesta y luego toca \"Mostrar solución\" y evalúate.';
+      'Piensa la respuesta; luego toca \"Mostrar solución\" y evalúate.';
 
   @override
-  String get tutorialButton => 'Ok, vamos';
+  String get tutorialButton => 'Vale, empecemos';
 
   @override
   String get badgeFree => 'GRATIS';
@@ -257,7 +257,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get modeMasu => 'forma ~masu';
 
   @override
-  String get modePotential => 'forma ~potencial';
+  String get modePotential => 'forma potencial';
 
   @override
   String get modeMix => 'mezcla aleatoria';
@@ -299,7 +299,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get ruleNumberMoShika => 'number + mo / shika';
 
   @override
-  String get ruleVolitional => 'Volitiva';
+  String get ruleVolitional => 'Forma volitiva';
 
   @override
   String get ruleVolitionalToOmotte => 'Volitivo + to omotte';
@@ -308,7 +308,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get ruleTeOku => '~te oku';
 
   @override
-  String get ruleRelative => 'Relativa';
+  String get ruleRelative => 'Frase relativa';
 
   @override
   String get ruleNagara => '~nagara';
@@ -335,7 +335,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Selecciona al menos una regla para empezar.';
 
   @override
-  String get customDeckModesTitle => 'Formas base';
+  String get customDeckModesTitle => 'Formas básicas';
 
   @override
   String get customDeckRulesTitle => 'Reglas';
