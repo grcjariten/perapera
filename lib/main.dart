@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:ui' as ui;
 
-import 'package:characters/characters.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -219,6 +218,14 @@ const String _assetTierA = 'assets/tierA.png';
 const String _assetTierB = 'assets/tierB.png';
 const String _assetTierC = 'assets/tierC.png';
 const String _assetTierD = 'assets/tierD.png';
+const List<String> _mascotAssets = <String>[
+  _assetMascotte,
+  _assetTierS,
+  _assetTierA,
+  _assetTierB,
+  _assetTierC,
+  _assetTierD,
+];
 
 const double _tierThresholdS = 0.95;
 const double _tierThresholdA = 0.9;
@@ -1126,6 +1133,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
   String? _pendingDeckId;
   bool _proEntitlementCheckInProgress = false;
   Timer? _proEntitlementCheckTimer;
+  bool _didPrecacheMascotAssets = false;
 
   @override
   void initState() {
@@ -1146,6 +1154,18 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     _maybeShowTutorial();
     _loadTier();
     _initInAppPurchase();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didPrecacheMascotAssets) {
+      return;
+    }
+    _didPrecacheMascotAssets = true;
+    for (final String asset in _mascotAssets) {
+      unawaited(precacheImage(AssetImage(asset), context));
+    }
   }
 
   @override
@@ -2135,6 +2155,9 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final deck = _selectedDeck;
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final Map<String, String> deckLabels = <String, String>{
+      for (final PracticeDeck value in _decks) value.id: _deckLabel(value, l10n),
+    };
     final bool deckAvailable = deck != null && _isDeckAvailable(deck);
     final bool customSelectionEmpty = deck?.kind == DeckKind.custom &&
         deckAvailable &&
@@ -2233,7 +2256,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                           .map(
                             (deck) => Align(
                               alignment: Alignment.centerLeft,
-                              child: Text(_deckLabel(deck, l10n)),
+                              child: Text(deckLabels[deck.id] ?? deck.id),
                             ),
                           )
                           .toList();
@@ -2242,7 +2265,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                       if (value == null) return;
                       _handleDeckSelection(value);
                     },
-                    items: _deckDropdownItems(context),
+                    items: _deckDropdownItems(context, deckLabels),
                   ),
                 ),
                 if (showUnavailableHint) ...[
@@ -2390,6 +2413,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
     final theme = Theme.of(context);
     final accent = _deckAccentColor(deck);
     final _PatternStyle patternStyle = _patternStyleForTier(visualTier);
+    final int mascotCacheHeight =
+        (170 * 1.55 * MediaQuery.of(context).devicePixelRatio).round();
     final double baseTintAmount =
         isTierS ? 0.14 : ((isTierA || isTierB) ? 0.07 : 0.1);
     final double gradStartTintAmount =
@@ -2437,60 +2462,66 @@ class _TrainerHomePageState extends State<TrainerHomePage>
           fontWeight: FontWeight.w700,
           color: hasData ? Colors.white : theme.hintColor,
         );
-    return InkWell(
-      onTap: () => _openStatsPage(deck),
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        decoration: BoxDecoration(
-          color: cardBase,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: frameColor),
-          gradient: LinearGradient(
-            colors: cardGradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return RepaintBoundary(
+      child: InkWell(
+        onTap: () => _openStatsPage(deck),
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          decoration: BoxDecoration(
+            color: cardBase,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: frameColor),
+            gradient: LinearGradient(
+              colors: cardGradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: isTierS
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFFFF5CD6).withOpacity(0.4),
+                      blurRadius: 26,
+                      offset: const Offset(0, 8),
+                    ),
+                    BoxShadow(
+                      color: const Color(0xFF8A4CFF).withOpacity(0.25),
+                      blurRadius: 32,
+                      offset: const Offset(0, 10),
+                    ),
+                  ]
+                : null,
           ),
-          boxShadow: isTierS
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFFFF5CD6).withOpacity(0.4),
-                    blurRadius: 26,
-                    offset: const Offset(0, 8),
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFF8A4CFF).withOpacity(0.25),
-                    blurRadius: 32,
-                    offset: const Offset(0, 10),
-                  ),
-                ]
-              : null,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: SizedBox(
-            height: 170,
-            child: Stack(
-              children: [
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: SizedBox(
+              height: 170,
+              child: Stack(
+                children: [
                 Positioned.fill(
                   child: IgnorePointer(
                     child: AnimatedBuilder(
                       animation: _proPulse,
-                      builder: (context, child) {
-                        final double bob =
-                            (_proPulse.value * 2 - 1) * _mascotBobAmplitude;
-                        return CustomPaint(
+                      child: RepaintBoundary(
+                        child: CustomPaint(
+                          isComplex: true,
+                          willChange: false,
                           painter: _PepPatternPainter(
                             color: patternInk,
                             gradientColors: patternGradient,
                             glowColor: patternGlow,
                             darkerEvery: patternStyle.darkerEvery,
                             highlightEvery: patternStyle.highlightEvery,
-                            // Keep the "different" characters crisp; the base pattern is already
-                            // controlled by patternOpacity.
                             highlightColor: patternStyle.highlightColor,
                             highlightGlowColor: patternStyle.highlightGlowColor,
-                            verticalShift: -bob,
                           ),
+                        ),
+                      ),
+                      builder: (context, child) {
+                        final double bob =
+                            (_proPulse.value * 2 - 1) * _mascotBobAmplitude;
+                        return Transform.translate(
+                          offset: Offset(0, -bob),
+                          child: child,
                         );
                       },
                     ),
@@ -2527,12 +2558,16 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                           child: child,
                         );
                       },
-                      child: Transform.scale(
-                        scale: 1.55,
-                        child: Image.asset(
-                          mascotAsset,
-                          fit: BoxFit.contain,
-                          alignment: Alignment.center,
+                      child: RepaintBoundary(
+                        child: Transform.scale(
+                          scale: 1.55,
+                          child: Image.asset(
+                            mascotAsset,
+                            fit: BoxFit.contain,
+                            alignment: Alignment.center,
+                            filterQuality: FilterQuality.low,
+                            cacheHeight: mascotCacheHeight,
+                          ),
                         ),
                       ),
                     ),
@@ -2603,7 +2638,8 @@ class _TrainerHomePageState extends State<TrainerHomePage>
                     bottom: 10,
                     child: _TierBadge(tier: tier, compact: true),
                   ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -2613,6 +2649,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
 
   List<DropdownMenuItem<PracticeDeck>> _deckDropdownItems(
     BuildContext context,
+    Map<String, String> deckLabels,
   ) {
     final theme = Theme.of(context);
     final disabledColor = theme.disabledColor;
@@ -2623,7 +2660,7 @@ class _TrainerHomePageState extends State<TrainerHomePage>
         final bool showBadges = showProBadges && !_isProUser;
         final bool showPro = showBadges && !isAvailable;
         final bool showFree = showBadges && isAvailable;
-        final deckLabel = _deckLabel(deck, l10n);
+        final deckLabel = deckLabels[deck.id] ?? _deckLabel(deck, l10n);
         final Color proBadgeColor = isAvailable ? _proGold : disabledColor;
         final Color accentBase = _deckAccentColor(deck);
         final bool isDimmed = !isAvailable;
@@ -4070,7 +4107,6 @@ class _PepPatternPainter extends CustomPainter {
     this.highlightEvery = 0,
     this.highlightColor,
     this.highlightGlowColor,
-    this.verticalShift = 0,
   });
 
   final Color color;
@@ -4080,24 +4116,12 @@ class _PepPatternPainter extends CustomPainter {
   final int highlightEvery;
   final Color? highlightColor;
   final Color? highlightGlowColor;
-  final double verticalShift;
 
   @override
   void paint(Canvas canvas, Size size) {
     const String label = '\u30da\u30e9\u30da\u30e9';
-
     final bool useFlatColors = gradientColors == null;
-    // Requested behavior: no special glyphs, uniform glow on all glyphs.
-    final int effectiveDarkerEvery = 0;
-    final int effectiveHighlightEvery = 0;
-    final Color? effectiveHighlightColor = null;
     final Color? baseGlow = useFlatColors ? color : null;
-    final Color? effectiveHighlightGlow = null;
-
-    final Color darkerColor = Color.lerp(color, Colors.black, 0.18) ?? color;
-    final Color? darkerGlow = baseGlow == null
-        ? null
-        : (Color.lerp(baseGlow, Colors.black, 0.12) ?? baseGlow);
 
     final TextStyle baseStyle = TextStyle(
       color: color,
@@ -4113,190 +4137,48 @@ class _PepPatternPainter extends CustomPainter {
             ],
     );
 
-    final TextStyle darkerStyle = baseStyle.copyWith(
-      color: darkerColor,
-      shadows: darkerGlow == null
-          ? null
-          : <Shadow>[
-              Shadow(color: darkerGlow.withOpacity(0.2), blurRadius: 8),
-              Shadow(color: darkerGlow.withOpacity(0.1), blurRadius: 14),
-            ],
-    );
-    final List<Shadow>? highlightGlowShadows = effectiveHighlightGlow == null
-        ? null
-        : <Shadow>[
-            Shadow(
-              color: effectiveHighlightGlow.withValues(alpha: 0.92),
-              blurRadius: 5,
-            ),
-            Shadow(
-              color: effectiveHighlightGlow.withValues(alpha: 0.48),
-              blurRadius: 8,
-            ),
-          ];
-
-    final TextStyle highlightStyle = effectiveHighlightColor == null
-        ? baseStyle
-        : baseStyle.copyWith(
-            color: effectiveHighlightColor,
-            shadows: highlightGlowShadows,
-          );
-    final TextStyle highlightFillStyle = effectiveHighlightColor == null
-        ? baseStyle
-        : baseStyle.copyWith(
-            color: effectiveHighlightColor,
-            shadows: const <Shadow>[],
-          );
-    final TextStyle highlightGlowStyle = effectiveHighlightGlow == null
-        ? baseStyle.copyWith(shadows: const <Shadow>[])
-        : baseStyle.copyWith(
-            color: effectiveHighlightGlow.withValues(alpha: 0.2),
-            shadows: highlightGlowShadows,
-          );
-    final TextStyle transparentStyle = baseStyle.copyWith(
-      color: Colors.transparent,
-      shadows: const <Shadow>[],
-    );
-    final bool splitHighlightGlow = useFlatColors &&
-        effectiveHighlightEvery > 0 &&
-        effectiveHighlightColor != null &&
-        effectiveHighlightGlow != null;
-
     final TextPainter measurePainter = TextPainter(
       text: TextSpan(text: label, style: baseStyle),
       textDirection: ui.TextDirection.ltr,
     )..layout();
 
     final int repeatCount = (size.width / measurePainter.width).ceil() + 4;
+    final String rowText = List<String>.filled(repeatCount, label).join();
     final double rowHeight = measurePainter.height + 6;
+    final TextPainter? flatPainter = useFlatColors
+        ? (TextPainter(
+            text: TextSpan(text: rowText, style: baseStyle),
+            textDirection: ui.TextDirection.ltr,
+          )..layout())
+        : null;
 
     int rowIndex = 0;
     for (double y = -rowHeight; y < size.height + rowHeight; y += rowHeight) {
       final double xJitter = (rowIndex % 4) * 8 - 10;
       final double yJitter = (rowIndex % 3) * 2 - 2;
-
-      final TextStyle rowStyle;
-      final TextStyle rowDarkerStyle;
-      final TextStyle rowHighlightStyle;
-      final TextStyle rowHighlightFillStyle;
-      final TextStyle rowHighlightGlowStyle;
-      final TextStyle rowTransparentStyle;
-
-      if (useFlatColors) {
-        rowStyle = baseStyle;
-        rowDarkerStyle = darkerStyle;
-        rowHighlightStyle = highlightStyle;
-        rowHighlightFillStyle = highlightFillStyle;
-        rowHighlightGlowStyle = highlightGlowStyle;
-        rowTransparentStyle = transparentStyle;
+      final Offset rowOffset = Offset(-8 + xJitter, y + yJitter);
+      if (flatPainter != null) {
+        flatPainter.paint(canvas, rowOffset);
       } else {
         final Paint paint = Paint()
           ..shader = LinearGradient(
             colors: gradientColors!,
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
-          ).createShader(
-            Rect.fromLTWH(0, y + verticalShift, size.width, rowHeight),
-          );
-        rowStyle = TextStyle(
+          ).createShader(Rect.fromLTWH(0, y, size.width, rowHeight));
+        final TextStyle rowStyle = TextStyle(
           foreground: paint,
           fontSize: baseStyle.fontSize,
           fontWeight: baseStyle.fontWeight,
           letterSpacing: baseStyle.letterSpacing,
           shadows: baseStyle.shadows,
         );
-        rowDarkerStyle = rowStyle;
-        rowHighlightStyle = rowStyle;
-        rowHighlightFillStyle = rowStyle;
-        rowHighlightGlowStyle = rowStyle;
-        rowTransparentStyle = rowStyle;
+        final TextPainter rowPainter = TextPainter(
+          text: TextSpan(text: rowText, style: rowStyle),
+          textDirection: ui.TextDirection.ltr,
+        )..layout();
+        rowPainter.paint(canvas, rowOffset);
       }
-
-      final Offset rowOffset = Offset(
-        -8 + xJitter,
-        y + yJitter + verticalShift,
-      );
-      late final InlineSpan rowSpan;
-
-      if (effectiveDarkerEvery <= 0 &&
-          effectiveHighlightEvery <= 0 &&
-          !useFlatColors) {
-        final String rowText = List<String>.filled(repeatCount, label).join();
-        rowSpan = TextSpan(text: rowText, style: rowStyle);
-      } else {
-        final String rowText = List<String>.filled(repeatCount, label).join();
-        if (splitHighlightGlow) {
-          final List<InlineSpan> glowChildren = <InlineSpan>[];
-          final List<InlineSpan> fillChildren = <InlineSpan>[];
-          int charIndex = 0;
-          for (final String symbol in rowText.characters) {
-            final int styledIndex = charIndex + rowIndex;
-            final bool isHighlight = effectiveHighlightEvery > 0 &&
-                effectiveHighlightColor != null &&
-                styledIndex % effectiveHighlightEvery == 0;
-            final bool isDarker = !isHighlight &&
-                effectiveDarkerEvery > 0 &&
-                styledIndex % effectiveDarkerEvery == 0;
-            glowChildren.add(
-              TextSpan(
-                text: symbol,
-                style:
-                    isHighlight ? rowHighlightGlowStyle : rowTransparentStyle,
-              ),
-            );
-            fillChildren.add(
-              TextSpan(
-                text: symbol,
-                style: isHighlight
-                    ? rowHighlightFillStyle
-                    : (isDarker ? rowDarkerStyle : rowStyle),
-              ),
-            );
-            charIndex++;
-          }
-          final TextPainter glowPainter = TextPainter(
-            text: TextSpan(children: glowChildren),
-            textDirection: ui.TextDirection.ltr,
-          )..layout();
-          final TextPainter fillPainter = TextPainter(
-            text: TextSpan(children: fillChildren),
-            textDirection: ui.TextDirection.ltr,
-          )..layout();
-          glowPainter.paint(canvas, rowOffset);
-          fillPainter.paint(canvas, rowOffset);
-          rowIndex++;
-          continue;
-        }
-
-        final List<InlineSpan> children = <InlineSpan>[];
-        int charIndex = 0;
-        for (final String symbol in rowText.characters) {
-          final int styledIndex = charIndex + rowIndex;
-          final bool isHighlight = effectiveHighlightEvery > 0 &&
-              effectiveHighlightColor != null &&
-              styledIndex % effectiveHighlightEvery == 0;
-          final bool isDarker = !isHighlight &&
-              effectiveDarkerEvery > 0 &&
-              styledIndex % effectiveDarkerEvery == 0;
-          final TextStyle style = isHighlight
-              ? rowHighlightStyle
-              : (isDarker ? rowDarkerStyle : rowStyle);
-          children.add(
-            TextSpan(
-              text: symbol,
-              style: style,
-            ),
-          );
-          charIndex++;
-        }
-        rowSpan = TextSpan(children: children);
-      }
-
-      final TextPainter rowPainter = TextPainter(
-        text: rowSpan,
-        textDirection: ui.TextDirection.ltr,
-      )..layout();
-      rowPainter.paint(canvas, rowOffset);
       rowIndex++;
     }
   }
@@ -4309,8 +4191,7 @@ class _PepPatternPainter extends CustomPainter {
         oldDelegate.darkerEvery != darkerEvery ||
         oldDelegate.highlightEvery != highlightEvery ||
         oldDelegate.highlightColor != highlightColor ||
-        oldDelegate.highlightGlowColor != highlightGlowColor ||
-        oldDelegate.verticalShift != verticalShift;
+        oldDelegate.highlightGlowColor != highlightGlowColor;
   }
 }
 
